@@ -1,0 +1,13 @@
+my_retrieval_project/
+├── sections/
+│   ├── 01_foundational_physics.md
+│   ├── 02_literature_survey.md
+│   ├── 03_data_engineering_and_preprocessing.md
+│   ├── 04_neural_architecture_and_math.md
+│   ├── 05_inductive_evaluation_and_faiss.md
+│   ├── 06_results_ablations_and_diagnostics.md
+│   └── 07_appendices.md
+├── figures/
+├── template.tex
+├── metadata.yaml
+└── build.sh

@@ -1,0 +1,15 @@
+---
+title: "Cross-Modal Satellite Image Retrieval"
+subtitle: "Semantic Alignment of Heterogeneous Active and Passive Sensors"
+author: "Author Name"
+date: "\\today"
+abstract: |
+  This research monograph investigates cross-modal satellite image retrieval using paired Sentinel-1 SAR and Sentinel-2 optical imagery. A unified, modality-agnostic latent space is constructed via ConvNeXt-Tiny and Generalized Mean pooling. By integrating a multi-label Jaccard masked InfoNCE loss and frozen inductive validation centering, the system successfully neutralizes modality cone collapse and enables sub-millisecond retrieval across heterogeneous remote sensing domains.
+geometry: "a4paper, margin=1in"
+fontsize: 11pt
+linestretch: 1.2
+toc-depth: 2
+bibliography: references.bib
+csl: ieee.csl
+link-citations: true
+...

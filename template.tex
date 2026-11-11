@@ -1,0 +1,82 @@
+
+\documentclass[$if(fontsize)$$fontsize$,$endif$a4paper,oneside]{report}
+
+\usepackage{geometry}
+$if(geometry)$
+\geometry{$for(geometry)$$geometry$$sep$,$endfor$}
+$endif$
+
+\usepackage{amsmath,amssymb}
+\usepackage{graphicx}
+\usepackage{hyperref}
+\usepackage{xcolor}
+\usepackage{booktabs}
+\usepackage{fontspec}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{calc}
+\usepackage{framed}
+\usepackage{float}
+\usepackage{fancyvrb}
+
+% Allow line breaks in backticks (\texttt)
+\usepackage{xurl}
+\makeatletter
+\g@addto@macro\ttfamily{\hyphenchar\font=`\-}
+\makeatother
+
+% Font shaping & layout (XeLaTeX optimization)
+\defaultfontfeatures{Ligatures=TeX}
+
+% Prevent pandoc tightlist errors
+\providecommand{\tightlist}{
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}
+}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    filecolor=magenta,
+    urlcolor=cyan,
+    citecolor=blue,
+    pdftitle={$title$},
+    pdfauthor={$author$}
+}
+
+$if(highlighting-css)$
+$highlighting-css$
+$endif$
+
+$common.latex()$
+
+\begin{document}
+
+\begin{titlepage}
+    \centering
+    \vspace*{2cm}
+    {\Huge \bfseries $title$ \par}
+    \vspace{1.5cm}
+    {\Large $subtitle$ \par}
+    \vspace{3cm}
+    {\large \bfseries $author$ \par}
+    \vspace{2cm}
+    {\large $date$ \par}
+    \vfill
+    $if(abstract)$
+    \begin{minipage}{0.8\textwidth}
+    \textbf{Abstract} \par
+    \vspace{0.5cm}
+    $abstract$
+    \end{minipage}
+    $endif$
+    \vfill
+\end{titlepage}
+
+$if(toc)$
+\tableofcontents
+\newpage
+$endif$
+
+$body$
+
+\end{document}
