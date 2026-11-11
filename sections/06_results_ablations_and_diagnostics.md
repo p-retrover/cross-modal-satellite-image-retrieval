@@ -57,6 +57,18 @@ Each retrieved candidate patch in the visual output is annotated with:
 3. **Dice / F1 Overlap:** Displays the multi-label Sørensen–Dice (F1) similarity between the query's CORINE labels and the retrieved candidate's labels.
 4. **Cosine Similarity:** The raw inner-product score ($0.0 \to 1.0$) computed by FAISS in the normalized 256-D latent space.
 
+![Modality-Agnostic Test 1: SAR query retrieving mixed cross-modal semantic candidates.](images/retrieval_images/result-img-1.png)
+*Figure 6.1: A Sentinel-1 SAR query (Agriculture / Broad-leaved forest) seamlessly traversing the modality gap to retrieve semantically identical Sentinel-2 Optical patches at Ranks 1, 2, 4, and 5.*
+
+![Modality-Agnostic Test 2: Optical query retrieving a SAR geographic twin.](images/retrieval_images/result-img-2.png)
+*Figure 6.2: An Optical query (Inland wetlands) successfully retrieving its exact SAR geographic [TWIN] at Rank 2 with a high cosine similarity of 0.91.*
+
+![Modality-Agnostic Test 3: SAR query retrieving intra-modal candidates.](images/retrieval_images/result-img-3.png)
+*Figure 6.3: A SAR query (Arable land) exhibiting intra-modal clustering, retrieving morphologically similar SAR patches with perfect (1.00) multi-label Dice overlap at Ranks 1, 4, and 5.*
+
+![Modality-Agnostic Test 4: SAR query retrieving an Optical geographic twin.](images/retrieval_images/result-img-4.png)
+*Figure 6.4: A SAR query (Arable land / Pastures) retrieving a highly diverse mixed-modality set, successfully localizing its exact Optical geographic [TWIN] at Rank 4 alongside highly overlapping semantic neighbors.*
+
 Visual inspection of these panels confirms that even when the exact geographic twin is missed at Rank 1, the subsequent retrieved patches exhibit identical terrain morphology and high multi-label F1 overlap ($\sim 0.73$), proving that the network learned genuine physical topography and land-cover semantics rather than overfitting to coordinate artifacts.
 
 ## Hardware-Synchronized Inference Latency
