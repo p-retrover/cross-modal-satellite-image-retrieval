@@ -1,4 +1,3 @@
-
 \documentclass[$if(fontsize)$$fontsize$,$endif$a4paper,oneside]{report}
 
 \usepackage{geometry}
@@ -16,8 +15,11 @@ $endif$
 \usepackage{array}
 \usepackage{calc}
 \usepackage{framed}
+\usepackage{graphicx}
+\usepackage{subcaption}
 \usepackage{float}
 \usepackage{fancyvrb}
+\usepackage[most]{tcolorbox} % Added for modern styled boxes
 
 % Allow line breaks in backticks (\texttt)
 \usepackage{xurl}
@@ -48,6 +50,43 @@ $highlighting-css$
 $endif$
 
 $common.latex()$
+
+% --- Custom Code Block Styling (Box + Line Numbers) ---
+% 1. Enable line numbers globally for Pandoc's Highlighting environment
+\fvset{
+  numbers=left,
+  numbersep=8pt,
+  numberblanklines=true,
+  fontsize=\small
+}
+% Style the line numbers (gray, tiny, sans-serif)
+\renewcommand{\theFancyVerbLine}{\sffamily\textcolor{gray}{\scriptsize\arabic{FancyVerbLine}}}
+
+% 2. Override Pandoc's 'Shaded' box with a sleek tcolorbox
+\definecolor{codebg}{HTML}{F8F9FA}
+\definecolor{codeframe}{HTML}{D0D7DE}
+
+\AtBeginDocument{
+  \renewenvironment{Shaded}{
+    \begin{tcolorbox}[
+      breakable,
+      enhanced,
+      colback=codebg,
+      colframe=codeframe,
+      boxrule=0.6pt,
+      arc=4pt,
+      left=18pt, % Extra left padding to keep line numbers inside the box
+      right=8pt,
+      top=6pt,
+      bottom=6pt,
+      before skip=10pt,
+      after skip=10pt
+    ]
+  }{
+    \end{tcolorbox}
+  }
+}
+% ------------------------------------------------------
 
 \begin{document}
 

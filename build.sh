@@ -12,7 +12,6 @@ pandoc metadata.yaml \
     --top-level-division=chapter \
     --toc \
     --number-sections \
-    --no-highlight \
     --citeproc \
     -o build/final_technical_report.pdf
 

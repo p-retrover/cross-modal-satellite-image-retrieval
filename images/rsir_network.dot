@@ -1,0 +1,31 @@
+digraph RSIR {
+    rankdir=LR;
+    node [shape=box, style="rounded,filled", fillcolor="#f0f4f8", fontname="sans-serif", margin=0.2];
+
+    RSIR [fillcolor="#ffd1dc", style="rounded,filled,bold"];
+
+    RSIR -> "uni-source retrieval";
+    RSIR -> "cross-source retrieval";
+
+    "uni-source retrieval" -> "single-label retrieval";
+    "uni-source retrieval" -> "multi-label retrieval";
+
+    "cross-source retrieval" -> "cross-modal retrieval";
+    "cross-source retrieval" -> "retrieval across different sensors";
+    "cross-source retrieval" -> "cross-view retrieval";
+
+    "cross-modal retrieval" -> "sketch - image";
+    "cross-modal retrieval" -> "optical - SAR";
+    "cross-modal retrieval" -> "text - image";
+    "cross-modal retrieval" -> "audio - image";
+
+    "cross-view retrieval" -> "ground-ground";
+    "cross-view retrieval" -> "ground-overhead";
+    "cross-view retrieval" -> "overhead-overhead";
+
+    "ground-overhead" -> "ground - satellite";
+    "ground-overhead" -> "ground - aerial";
+    "ground-overhead" -> "ground - drone";
+
+    "overhead-overhead" -> "drone-satellite";
+}

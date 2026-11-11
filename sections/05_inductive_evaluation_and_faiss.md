@@ -20,7 +20,7 @@ This completely preserves the strict independence of the test set while effectiv
 
 Unlike rigid directional pipelines that constrain searches strictly from one modality to another (e.g., querying SAR against a database of only Optical images), this architecture features a unified, modality-agnostic gallery.
 
-The embeddings for all 3,248 Sentinel-1 test patches and all 3,248 Sentinel-2 test patches are stacked into a single 6,496-item database. Because the vectors are $\ell_2$-normalized, maximizing cosine similarity is mathematically equivalent to maximizing the inner product. We utilize the Facebook AI Similarity Search (FAISS) library, specifically `faiss.IndexFlatIP(256)`, for exact, exhaustive inner-product search across the 256-dimensional latent space. 
+The embeddings for all 3,248 Sentinel-1 test patches and all 3,248 Sentinel-2 test patches are stacked into a single 6,496-item database. Because the vectors are $\ell_2$-normalized, maximizing cosine similarity is mathematically equivalent to maximizing the inner product. We utilize the Facebook AI Similarity Search (FAISS) library[@johnson2019], specifically `faiss.IndexFlatIP(256)`, for exact, exhaustive inner-product search across the 256-dimensional latent space. 
 
 When an image is queried, it traverses this mixed gallery. To prevent trivial self-retrieval, exact identical twins (where both the patch ID and the modality exactly match the query: $\text{pid}_h = \text{pid}_q \land \text{mod}_h = \text{mod}_q$) are dynamically filtered out of the top-$K$ results.
 
@@ -50,7 +50,7 @@ To ensure rigorous profiling, explicit stream barrier synchronization is enforce
 ## Experimental Discipline and Reproducibility Protocol
 
 Every experiment and ablation strictly adheres to the following empirical parameters to ensure scientific reproducibility:
-*   **Split Integrity:** Models are trained exclusively on the 7,180 training pairs. The test split is entirely untouched during training and hyperparameter tuning.
-*   **Checkpoint Selection:** Model weights are selected based on composite validation performance ($\text{Geo R}@5 + \text{Mean Label Dice}@5$) and persisted directly to disk with OS-level buffer synchronization (`os.sync()`) to prevent corruption.
-*   **Baseline Discipline:** A simple baseline (standard InfoNCE without masking, uncalibrated FAISS gallery) is maintained, modifying only one major architectural or mathematical factor at a time.
-*   **Reporting:** Scores are never derived from transductive centering or tuned on the test set. All metrics reflect strictly inductive, zero-leakage deployments.
+   **Split Integrity:** Models are trained exclusively on the 7,180 training pairs. The test split is entirely untouched during training and hyperparameter tuning.
+   **Checkpoint Selection:** Model weights are selected based on composite validation performance ($\text{Geo R}@5 + \text{Mean Label Dice}@5$) and persisted directly to disk with OS-level buffer synchronization (`os.sync()`) to prevent corruption.
+   **Baseline Discipline:** A simple baseline (standard InfoNCE without masking, uncalibrated FAISS gallery) is maintained, modifying only one major architectural or mathematical factor at a time.
+   **Reporting:** Scores are never derived from transductive centering or tuned on the test set. All metrics reflect strictly inductive, zero-leakage deployments.

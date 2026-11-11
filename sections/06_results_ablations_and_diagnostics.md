@@ -16,7 +16,7 @@ All models in the ablation study were trained for 30 epochs on the 7,180-pair Bi
 *(Note: The exact percentage values above are representative placeholders for the final compiled Colab benchmark metrics).*
 
 ### Analysis of Ablation Results
-1.  **Backbone and Pooling (B1 to B2):** Upgrading from ResNet-50 with Global Average Pooling (GAP) to ConvNeXt-Tiny with Generalized Mean (GeM) pooling provided a massive boost to geographic counterpart recall. GeM pooling preserved localized high-frequency spatial features (like isolated buildings or bridges) that GAP otherwise smoothed out into background noise.
+1.  **Backbone and Pooling (B1 to B2):** Upgrading from ResNet-50[@he2016] with Global Average Pooling (GAP) to ConvNeXt-Tiny[@liu2022] with Generalized Mean (GeM) pooling[@radenovic2018] provided a massive boost to geographic counterpart recall. GeM pooling preserved localized high-frequency spatial features (like isolated buildings or bridges) that GAP otherwise smoothed out into background noise.
 2.  **Semantic Masking (B2 to B3):** Introducing the Jaccard (IoU) false-negative mask slightly depressed the exact twin recall but dramatically improved the semantic Dice score. By preventing the InfoNCE objective from pushing apart distinct geographic patches that shared identical land cover, the latent space naturally clustered similar biomes.
 3.  **Inductive Centering (B3 to Ours):** The most significant performance leap occurred when Frozen Inductive Centering was applied. B3 suffered from severe modality cone collapse; when a SAR image was queried, the uncalibrated network predominantly retrieved other SAR images. Shifting the test embeddings using the frozen validation centroids perfectly aligned the SAR and Optical representation cones, unlocking the true cross-modal capabilities of the network.
 
@@ -35,9 +35,9 @@ Optical queries marginally outperformed SAR queries. This aligns with physical e
 ## Semantic Class-Level Diagnostics
 
 Retrieval accuracy varies predictably based on the physical interaction of the C-band microwave signal and the specific CORINE land-cover class:
-*   **Urban Fabric and Industrial Units:** Achieved the highest semantic Dice scores. The strong double-bounce corner reflectors in SAR (bright pixels) correlate perfectly with the structural geometry visible in the optical bands, allowing the network to lock onto these features easily.
-*   **Water Bodies (Marine and Inland):** Achieved high geographic recall due to specular reflection. Water appears consistently black in SAR ($\sigma^0 < -25\text{ dB}$) and highly absorptive in Optical SWIR bands, creating a strong multi-modal signature.
-*   **Transitional Woodland/Shrub:** Showed the lowest semantic performance. In SAR, volumetric canopy scattering heavily depends on seasonal leaf-on/leaf-off states and moisture, which may not perfectly correlate with the optical greenness captured during a specific Sentinel-2 overpass.
+   **Urban Fabric and Industrial Units:** Achieved the highest semantic Dice scores. The strong double-bounce corner reflectors in SAR (bright pixels) correlate perfectly with the structural geometry visible in the optical bands, allowing the network to lock onto these features easily.
+   **Water Bodies (Marine and Inland):** Achieved high geographic recall due to specular reflection. Water appears consistently black in SAR ($\sigma^0 < -25\text{ dB}$) and highly absorptive in Optical SWIR bands, creating a strong multi-modal signature.
+   **Transitional Woodland/Shrub:** Showed the lowest semantic performance. In SAR, volumetric canopy scattering heavily depends on seasonal leaf-on/leaf-off states and moisture, which may not perfectly correlate with the optical greenness captured during a specific Sentinel-2 overpass.
 
 ## Qualitative Visual Diagnostics
 

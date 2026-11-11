@@ -43,9 +43,9 @@ While dry soil exhibits a dielectric constant $\varepsilon_r \approx 3 - 5$, liq
 
 ### Geometric Distortions in Radar Geometry
 Because radar is a range-measuring instrument that determines target positions via the two-way propagation time $\Delta t = 2R/c$, SAR imagery acquired at an off-nadir incidence angle $\theta_i \in [29^\circ, 46^\circ]$ is subject to geometric distortions:
-*   **Foreshortening:** Slopes facing toward the radar sensor appear compressed in the slant-range plane.
-*   **Layover:** Extreme topographic relief where mountain summits are closer to the antenna in slant range than the mountain base, causing inverted topography.
-*   **Radar Shadow:** Terrain slopes steeper than the radar depression angle receive no illumination, resulting in total loss of backscatter information.
+   **Foreshortening:** Slopes facing toward the radar sensor appear compressed in the slant-range plane.
+   **Layover:** Extreme topographic relief where mountain summits are closer to the antenna in slant range than the mountain base, causing inverted topography.
+   **Radar Shadow:** Terrain slopes steeper than the radar depression angle receive no illumination, resulting in total loss of backscatter information.
 
 ---
 

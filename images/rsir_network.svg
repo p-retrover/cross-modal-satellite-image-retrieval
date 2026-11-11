@@ -1,0 +1,228 @@
+<svg width="831pt" height="470pt" viewBox="0.00 0.00 831.00 470.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 465.6)">
+<title>RSIR</title>
+<polygon fill="white" stroke="none" points="-4,4 -4,-465.6 826.9,-465.6 826.9,4 -4,4"/>
+<!-- RSIR -->
+<g id="node1" class="node">
+<title>RSIR</title>
+<path fill="#ffd1dc" stroke="black" stroke-width="2" d="M47.92,-333.6C47.92,-333.6 12,-333.6 12,-333.6 6,-333.6 0,-327.6 0,-321.6 0,-321.6 0,-300 0,-300 0,-294 6,-288 12,-288 12,-288 47.92,-288 47.92,-288 53.92,-288 59.92,-294 59.92,-300 59.92,-300 59.92,-321.6 59.92,-321.6 59.92,-327.6 53.92,-333.6 47.92,-333.6"/>
+<text xml:space="preserve" text-anchor="middle" x="29.96" y="-306.6" font-family="sans-serif" font-size="14.00">RSIR</text>
+</g>
+<!-- uni&#45;source retrieval -->
+<g id="node2" class="node">
+<title>uni-source retrieval</title>
+<path fill="#f0f4f8" stroke="black" d="M227.39,-397.6C227.39,-397.6 113.37,-397.6 113.37,-397.6 107.37,-397.6 101.37,-391.6 101.37,-385.6 101.37,-385.6 101.37,-364 101.37,-364 101.37,-358 107.37,-352 113.37,-352 113.37,-352 227.39,-352 227.39,-352 233.39,-352 239.39,-358 239.39,-364 239.39,-364 239.39,-385.6 239.39,-385.6 239.39,-391.6 233.39,-397.6 227.39,-397.6"/>
+<text xml:space="preserve" text-anchor="middle" x="170.38" y="-370.6" font-family="sans-serif" font-size="14.00">uni-source retrieval</text>
+</g>
+<!-- RSIR&#45;&gt;uni&#45;source retrieval -->
+<g id="edge1" class="edge">
+<title>RSIR-&gt;uni-source retrieval</title>
+<path fill="none" stroke="black" d="M60.32,-324.37C74.45,-330.91 91.94,-338.99 108.74,-346.76"/>
+<polygon fill="black" stroke="black" points="107.16,-349.89 117.71,-350.91 110.1,-343.54 107.16,-349.89"/>
+</g>
+<!-- cross&#45;source retrieval -->
+<g id="node3" class="node">
+<title>cross-source retrieval</title>
+<path fill="#f0f4f8" stroke="black" d="M232.83,-301.6C232.83,-301.6 107.92,-301.6 107.92,-301.6 101.92,-301.6 95.92,-295.6 95.92,-289.6 95.92,-289.6 95.92,-268 95.92,-268 95.92,-262 101.92,-256 107.92,-256 107.92,-256 232.83,-256 232.83,-256 238.83,-256 244.83,-262 244.83,-268 244.83,-268 244.83,-289.6 244.83,-289.6 244.83,-295.6 238.83,-301.6 232.83,-301.6"/>
+<text xml:space="preserve" text-anchor="middle" x="170.38" y="-274.6" font-family="sans-serif" font-size="14.00">cross-source retrieval</text>
+</g>
+<!-- RSIR&#45;&gt;cross&#45;source retrieval -->
+<g id="edge2" class="edge">
+<title>RSIR-&gt;cross-source retrieval</title>
+<path fill="none" stroke="black" d="M60.32,-304.01C67.68,-302.31 75.96,-300.4 84.58,-298.4"/>
+<polygon fill="black" stroke="black" points="85.21,-301.85 94.16,-296.19 83.63,-295.03 85.21,-301.85"/>
+</g>
+<!-- single&#45;label retrieval -->
+<g id="node4" class="node">
+<title>single-label retrieval</title>
+<path fill="#f0f4f8" stroke="black" d="M446.12,-461.6C446.12,-461.6 325.88,-461.6 325.88,-461.6 319.88,-461.6 313.88,-455.6 313.88,-449.6 313.88,-449.6 313.88,-428 313.88,-428 313.88,-422 319.88,-416 325.88,-416 325.88,-416 446.12,-416 446.12,-416 452.12,-416 458.12,-422 458.12,-428 458.12,-428 458.12,-449.6 458.12,-449.6 458.12,-455.6 452.12,-461.6 446.12,-461.6"/>
+<text xml:space="preserve" text-anchor="middle" x="386" y="-434.6" font-family="sans-serif" font-size="14.00">single-label retrieval</text>
+</g>
+<!-- uni&#45;source retrieval&#45;&gt;single&#45;label retrieval -->
+<g id="edge3" class="edge">
+<title>uni-source retrieval-&gt;single-label retrieval</title>
+<path fill="none" stroke="black" d="M239.85,-395.31C259.91,-401.32 282.04,-407.96 302.86,-414.19"/>
+<polygon fill="black" stroke="black" points="301.57,-417.46 312.15,-416.98 303.58,-410.75 301.57,-417.46"/>
+</g>
+<!-- multi&#45;label retrieval -->
+<g id="node5" class="node">
+<title>multi-label retrieval</title>
+<path fill="#f0f4f8" stroke="black" d="M444.18,-397.6C444.18,-397.6 327.82,-397.6 327.82,-397.6 321.82,-397.6 315.82,-391.6 315.82,-385.6 315.82,-385.6 315.82,-364 315.82,-364 315.82,-358 321.82,-352 327.82,-352 327.82,-352 444.18,-352 444.18,-352 450.18,-352 456.18,-358 456.18,-364 456.18,-364 456.18,-385.6 456.18,-385.6 456.18,-391.6 450.18,-397.6 444.18,-397.6"/>
+<text xml:space="preserve" text-anchor="middle" x="386" y="-370.6" font-family="sans-serif" font-size="14.00">multi-label retrieval</text>
+</g>
+<!-- uni&#45;source retrieval&#45;&gt;multi&#45;label retrieval -->
+<g id="edge4" class="edge">
+<title>uni-source retrieval-&gt;multi-label retrieval</title>
+<path fill="none" stroke="black" d="M239.85,-374.8C260.33,-374.8 282.98,-374.8 304.18,-374.8"/>
+<polygon fill="black" stroke="black" points="303.93,-378.3 313.93,-374.8 303.93,-371.3 303.93,-378.3"/>
+</g>
+<!-- cross&#45;modal retrieval -->
+<g id="node6" class="node">
+<title>cross-modal retrieval</title>
+<path fill="#f0f4f8" stroke="black" d="M447.68,-333.6C447.68,-333.6 324.32,-333.6 324.32,-333.6 318.32,-333.6 312.32,-327.6 312.32,-321.6 312.32,-321.6 312.32,-300 312.32,-300 312.32,-294 318.32,-288 324.32,-288 324.32,-288 447.68,-288 447.68,-288 453.68,-288 459.68,-294 459.68,-300 459.68,-300 459.68,-321.6 459.68,-321.6 459.68,-327.6 453.68,-333.6 447.68,-333.6"/>
+<text xml:space="preserve" text-anchor="middle" x="386" y="-306.6" font-family="sans-serif" font-size="14.00">cross-modal retrieval</text>
+</g>
+<!-- cross&#45;source retrieval&#45;&gt;cross&#45;modal retrieval -->
+<g id="edge5" class="edge">
+<title>cross-source retrieval-&gt;cross-modal retrieval</title>
+<path fill="none" stroke="black" d="M245.19,-289.86C263.07,-292.54 282.31,-295.42 300.64,-298.16"/>
+<polygon fill="black" stroke="black" points="300,-301.61 310.41,-299.63 301.04,-294.68 300,-301.61"/>
+</g>
+<!-- retrieval across different sensors -->
+<g id="node7" class="node">
+<title>retrieval across different sensors</title>
+<path fill="#f0f4f8" stroke="black" d="M479.17,-269.6C479.17,-269.6 292.83,-269.6 292.83,-269.6 286.83,-269.6 280.83,-263.6 280.83,-257.6 280.83,-257.6 280.83,-236 280.83,-236 280.83,-230 286.83,-224 292.83,-224 292.83,-224 479.17,-224 479.17,-224 485.17,-224 491.17,-230 491.17,-236 491.17,-236 491.17,-257.6 491.17,-257.6 491.17,-263.6 485.17,-269.6 479.17,-269.6"/>
+<text xml:space="preserve" text-anchor="middle" x="386" y="-242.6" font-family="sans-serif" font-size="14.00">retrieval across different sensors</text>
+</g>
+<!-- cross&#45;source retrieval&#45;&gt;retrieval across different sensors -->
+<g id="edge6" class="edge">
+<title>cross-source retrieval-&gt;retrieval across different sensors</title>
+<path fill="none" stroke="black" d="M245.19,-267.74C253.07,-266.56 261.21,-265.34 269.42,-264.11"/>
+<polygon fill="black" stroke="black" points="269.78,-267.6 279.15,-262.66 268.74,-260.68 269.78,-267.6"/>
+</g>
+<!-- cross&#45;view retrieval -->
+<g id="node8" class="node">
+<title>cross-view retrieval</title>
+<path fill="#f0f4f8" stroke="black" d="M443.79,-173.6C443.79,-173.6 328.21,-173.6 328.21,-173.6 322.21,-173.6 316.21,-167.6 316.21,-161.6 316.21,-161.6 316.21,-140 316.21,-140 316.21,-134 322.21,-128 328.21,-128 328.21,-128 443.79,-128 443.79,-128 449.79,-128 455.79,-134 455.79,-140 455.79,-140 455.79,-161.6 455.79,-161.6 455.79,-167.6 449.79,-173.6 443.79,-173.6"/>
+<text xml:space="preserve" text-anchor="middle" x="386" y="-146.6" font-family="sans-serif" font-size="14.00">cross-view retrieval</text>
+</g>
+<!-- cross&#45;source retrieval&#45;&gt;cross&#45;view retrieval -->
+<g id="edge7" class="edge">
+<title>cross-source retrieval-&gt;cross-view retrieval</title>
+<path fill="none" stroke="black" d="M210.06,-255.62C245.64,-234.3 298.53,-202.61 336.84,-179.66"/>
+<polygon fill="black" stroke="black" points="338.16,-182.94 344.94,-174.8 334.57,-176.94 338.16,-182.94"/>
+</g>
+<!-- sketch &#45; image -->
+<g id="node9" class="node">
+<title>sketch - image</title>
+<path fill="#f0f4f8" stroke="black" d="M638.42,-461.6C638.42,-461.6 551.98,-461.6 551.98,-461.6 545.98,-461.6 539.98,-455.6 539.98,-449.6 539.98,-449.6 539.98,-428 539.98,-428 539.98,-422 545.98,-416 551.98,-416 551.98,-416 638.42,-416 638.42,-416 644.42,-416 650.42,-422 650.42,-428 650.42,-428 650.42,-449.6 650.42,-449.6 650.42,-455.6 644.42,-461.6 638.42,-461.6"/>
+<text xml:space="preserve" text-anchor="middle" x="595.2" y="-434.6" font-family="sans-serif" font-size="14.00">sketch - image</text>
+</g>
+<!-- cross&#45;modal retrieval&#45;&gt;sketch &#45; image -->
+<g id="edge8" class="edge">
+<title>cross-modal retrieval-&gt;sketch - image</title>
+<path fill="none" stroke="black" d="M460.06,-325.4C471.21,-329.77 482.03,-335.44 491.17,-342.8 516.58,-363.28 503.33,-384.51 527.17,-406.8 528.23,-407.79 529.32,-408.76 530.45,-409.7"/>
+<polygon fill="black" stroke="black" points="528.26,-412.43 538.39,-415.53 532.4,-406.79 528.26,-412.43"/>
+</g>
+<!-- optical &#45; SAR -->
+<g id="node10" class="node">
+<title>optical - SAR</title>
+<path fill="#f0f4f8" stroke="black" d="M636.1,-397.6C636.1,-397.6 554.3,-397.6 554.3,-397.6 548.3,-397.6 542.3,-391.6 542.3,-385.6 542.3,-385.6 542.3,-364 542.3,-364 542.3,-358 548.3,-352 554.3,-352 554.3,-352 636.1,-352 636.1,-352 642.1,-352 648.1,-358 648.1,-364 648.1,-364 648.1,-385.6 648.1,-385.6 648.1,-391.6 642.1,-397.6 636.1,-397.6"/>
+<text xml:space="preserve" text-anchor="middle" x="595.2" y="-370.6" font-family="sans-serif" font-size="14.00">optical - SAR</text>
+</g>
+<!-- cross&#45;modal retrieval&#45;&gt;optical &#45; SAR -->
+<g id="edge9" class="edge">
+<title>cross-modal retrieval-&gt;optical - SAR</title>
+<path fill="none" stroke="black" d="M460.14,-333.24C470.56,-336.44 481.13,-339.7 491.17,-342.8 504.1,-346.79 517.94,-351.08 531.15,-355.18"/>
+<polygon fill="black" stroke="black" points="530.03,-358.5 540.61,-358.12 532.1,-351.81 530.03,-358.5"/>
+</g>
+<!-- text &#45; image -->
+<g id="node11" class="node">
+<title>text - image</title>
+<path fill="#f0f4f8" stroke="black" d="M631.03,-333.6C631.03,-333.6 559.37,-333.6 559.37,-333.6 553.37,-333.6 547.37,-327.6 547.37,-321.6 547.37,-321.6 547.37,-300 547.37,-300 547.37,-294 553.37,-288 559.37,-288 559.37,-288 631.03,-288 631.03,-288 637.03,-288 643.03,-294 643.03,-300 643.03,-300 643.03,-321.6 643.03,-321.6 643.03,-327.6 637.03,-333.6 631.03,-333.6"/>
+<text xml:space="preserve" text-anchor="middle" x="595.2" y="-306.6" font-family="sans-serif" font-size="14.00">text - image</text>
+</g>
+<!-- cross&#45;modal retrieval&#45;&gt;text &#45; image -->
+<g id="edge10" class="edge">
+<title>cross-modal retrieval-&gt;text - image</title>
+<path fill="none" stroke="black" d="M460.05,-310.8C484.88,-310.8 512.29,-310.8 535.82,-310.8"/>
+<polygon fill="black" stroke="black" points="535.52,-314.3 545.52,-310.8 535.52,-307.3 535.52,-314.3"/>
+</g>
+<!-- audio &#45; image -->
+<g id="node12" class="node">
+<title>audio - image</title>
+<path fill="#f0f4f8" stroke="black" d="M636.09,-269.6C636.09,-269.6 554.32,-269.6 554.32,-269.6 548.32,-269.6 542.32,-263.6 542.32,-257.6 542.32,-257.6 542.32,-236 542.32,-236 542.32,-230 548.32,-224 554.32,-224 554.32,-224 636.09,-224 636.09,-224 642.09,-224 648.09,-230 648.09,-236 648.09,-236 648.09,-257.6 648.09,-257.6 648.09,-263.6 642.09,-269.6 636.09,-269.6"/>
+<text xml:space="preserve" text-anchor="middle" x="595.2" y="-242.6" font-family="sans-serif" font-size="14.00">audio - image</text>
+</g>
+<!-- cross&#45;modal retrieval&#45;&gt;audio &#45; image -->
+<g id="edge11" class="edge">
+<title>cross-modal retrieval-&gt;audio - image</title>
+<path fill="none" stroke="black" d="M460.14,-288.36C470.56,-285.16 481.13,-281.9 491.17,-278.8 504.1,-274.81 517.94,-270.52 531.15,-266.42"/>
+<polygon fill="black" stroke="black" points="532.1,-269.79 540.61,-263.48 530.03,-263.1 532.1,-269.79"/>
+</g>
+<!-- ground&#45;ground -->
+<g id="node13" class="node">
+<title>ground-ground</title>
+<path fill="#f0f4f8" stroke="black" d="M639.59,-205.6C639.59,-205.6 550.81,-205.6 550.81,-205.6 544.81,-205.6 538.81,-199.6 538.81,-193.6 538.81,-193.6 538.81,-172 538.81,-172 538.81,-166 544.81,-160 550.81,-160 550.81,-160 639.59,-160 639.59,-160 645.59,-160 651.59,-166 651.59,-172 651.59,-172 651.59,-193.6 651.59,-193.6 651.59,-199.6 645.59,-205.6 639.59,-205.6"/>
+<text xml:space="preserve" text-anchor="middle" x="595.2" y="-178.6" font-family="sans-serif" font-size="14.00">ground-ground</text>
+</g>
+<!-- cross&#45;view retrieval&#45;&gt;ground&#45;ground -->
+<g id="edge12" class="edge">
+<title>cross-view retrieval-&gt;ground-ground</title>
+<path fill="none" stroke="black" d="M456.28,-161.5C479.13,-165.03 504.48,-168.94 527.16,-172.45"/>
+<polygon fill="black" stroke="black" points="526.49,-175.88 536.9,-173.95 527.55,-168.97 526.49,-175.88"/>
+</g>
+<!-- ground&#45;overhead -->
+<g id="node14" class="node">
+<title>ground-overhead</title>
+<path fill="#f0f4f8" stroke="black" d="M645.42,-141.6C645.42,-141.6 544.99,-141.6 544.99,-141.6 538.99,-141.6 532.99,-135.6 532.99,-129.6 532.99,-129.6 532.99,-108 532.99,-108 532.99,-102 538.99,-96 544.99,-96 544.99,-96 645.42,-96 645.42,-96 651.42,-96 657.42,-102 657.42,-108 657.42,-108 657.42,-129.6 657.42,-129.6 657.42,-135.6 651.42,-141.6 645.42,-141.6"/>
+<text xml:space="preserve" text-anchor="middle" x="595.2" y="-114.6" font-family="sans-serif" font-size="14.00">ground-overhead</text>
+</g>
+<!-- cross&#45;view retrieval&#45;&gt;ground&#45;overhead -->
+<g id="edge13" class="edge">
+<title>cross-view retrieval-&gt;ground-overhead</title>
+<path fill="none" stroke="black" d="M456.28,-140.1C477.22,-136.87 500.28,-133.31 521.44,-130.04"/>
+<polygon fill="black" stroke="black" points="521.8,-133.52 531.15,-128.54 520.73,-126.61 521.8,-133.52"/>
+</g>
+<!-- overhead&#45;overhead -->
+<g id="node15" class="node">
+<title>overhead-overhead</title>
+<path fill="#f0f4f8" stroke="black" d="M651.24,-77.6C651.24,-77.6 539.17,-77.6 539.17,-77.6 533.17,-77.6 527.17,-71.6 527.17,-65.6 527.17,-65.6 527.17,-44 527.17,-44 527.17,-38 533.17,-32 539.17,-32 539.17,-32 651.24,-32 651.24,-32 657.24,-32 663.24,-38 663.24,-44 663.24,-44 663.24,-65.6 663.24,-65.6 663.24,-71.6 657.24,-77.6 651.24,-77.6"/>
+<text xml:space="preserve" text-anchor="middle" x="595.2" y="-50.6" font-family="sans-serif" font-size="14.00">overhead-overhead</text>
+</g>
+<!-- cross&#45;view retrieval&#45;&gt;overhead&#45;overhead -->
+<g id="edge14" class="edge">
+<title>cross-view retrieval-&gt;overhead-overhead</title>
+<path fill="none" stroke="black" d="M437.16,-127.56C466.32,-114.05 503.26,-96.94 533.98,-82.7"/>
+<polygon fill="black" stroke="black" points="535.17,-86.01 542.77,-78.63 532.23,-79.66 535.17,-86.01"/>
+</g>
+<!-- ground &#45; satellite -->
+<g id="node16" class="node">
+<title>ground - satellite</title>
+<path fill="#f0f4f8" stroke="black" d="M810.9,-237.6C810.9,-237.6 711.24,-237.6 711.24,-237.6 705.24,-237.6 699.24,-231.6 699.24,-225.6 699.24,-225.6 699.24,-204 699.24,-204 699.24,-198 705.24,-192 711.24,-192 711.24,-192 810.9,-192 810.9,-192 816.9,-192 822.9,-198 822.9,-204 822.9,-204 822.9,-225.6 822.9,-225.6 822.9,-231.6 816.9,-237.6 810.9,-237.6"/>
+<text xml:space="preserve" text-anchor="middle" x="761.07" y="-210.6" font-family="sans-serif" font-size="14.00">ground - satellite</text>
+</g>
+<!-- ground&#45;overhead&#45;&gt;ground &#45; satellite -->
+<g id="edge15" class="edge">
+<title>ground-overhead-&gt;ground - satellite</title>
+<path fill="none" stroke="black" d="M648.6,-142.03C653.66,-144.79 658.62,-147.73 663.24,-150.8 681.07,-162.64 681.63,-170.62 699.24,-182.8 700.62,-183.76 702.03,-184.7 703.46,-185.64"/>
+<polygon fill="black" stroke="black" points="701.57,-188.59 711.92,-190.85 705.25,-182.63 701.57,-188.59"/>
+</g>
+<!-- ground &#45; aerial -->
+<g id="node17" class="node">
+<title>ground - aerial</title>
+<path fill="#f0f4f8" stroke="black" d="M804.67,-173.6C804.67,-173.6 717.46,-173.6 717.46,-173.6 711.46,-173.6 705.46,-167.6 705.46,-161.6 705.46,-161.6 705.46,-140 705.46,-140 705.46,-134 711.46,-128 717.46,-128 717.46,-128 804.67,-128 804.67,-128 810.67,-128 816.67,-134 816.67,-140 816.67,-140 816.67,-161.6 816.67,-161.6 816.67,-167.6 810.67,-173.6 804.67,-173.6"/>
+<text xml:space="preserve" text-anchor="middle" x="761.07" y="-146.6" font-family="sans-serif" font-size="14.00">ground - aerial</text>
+</g>
+<!-- ground&#45;overhead&#45;&gt;ground &#45; aerial -->
+<g id="edge16" class="edge">
+<title>ground-overhead-&gt;ground - aerial</title>
+<path fill="none" stroke="black" d="M657.69,-130.81C669.45,-133.1 681.82,-135.52 693.74,-137.85"/>
+<polygon fill="black" stroke="black" points="693.01,-141.27 703.5,-139.75 694.35,-134.4 693.01,-141.27"/>
+</g>
+<!-- ground &#45; drone -->
+<g id="node18" class="node">
+<title>ground - drone</title>
+<path fill="#f0f4f8" stroke="black" d="M805.07,-109.6C805.07,-109.6 717.07,-109.6 717.07,-109.6 711.07,-109.6 705.07,-103.6 705.07,-97.6 705.07,-97.6 705.07,-76 705.07,-76 705.07,-70 711.07,-64 717.07,-64 717.07,-64 805.07,-64 805.07,-64 811.07,-64 817.07,-70 817.07,-76 817.07,-76 817.07,-97.6 817.07,-97.6 817.07,-103.6 811.07,-109.6 805.07,-109.6"/>
+<text xml:space="preserve" text-anchor="middle" x="761.07" y="-82.6" font-family="sans-serif" font-size="14.00">ground - drone</text>
+</g>
+<!-- ground&#45;overhead&#45;&gt;ground &#45; drone -->
+<g id="edge17" class="edge">
+<title>ground-overhead-&gt;ground - drone</title>
+<path fill="none" stroke="black" d="M657.69,-106.79C669.38,-104.51 681.68,-102.11 693.53,-99.79"/>
+<polygon fill="black" stroke="black" points="694.09,-103.25 703.23,-97.9 692.75,-96.38 694.09,-103.25"/>
+</g>
+<!-- drone&#45;satellite -->
+<g id="node19" class="node">
+<title>drone-satellite</title>
+<path fill="#f0f4f8" stroke="black" d="M803.51,-45.6C803.51,-45.6 718.63,-45.6 718.63,-45.6 712.63,-45.6 706.63,-39.6 706.63,-33.6 706.63,-33.6 706.63,-12 706.63,-12 706.63,-6 712.63,0 718.63,0 718.63,0 803.51,0 803.51,0 809.51,0 815.51,-6 815.51,-12 815.51,-12 815.51,-33.6 815.51,-33.6 815.51,-39.6 809.51,-45.6 803.51,-45.6"/>
+<text xml:space="preserve" text-anchor="middle" x="761.07" y="-18.6" font-family="sans-serif" font-size="14.00">drone-satellite</text>
+</g>
+<!-- overhead&#45;overhead&#45;&gt;drone&#45;satellite -->
+<g id="edge18" class="edge">
+<title>overhead-overhead-&gt;drone-satellite</title>
+<path fill="none" stroke="black" d="M663.32,-41.69C673.84,-39.64 684.69,-37.52 695.16,-35.48"/>
+<polygon fill="black" stroke="black" points="695.7,-38.94 704.84,-33.59 694.35,-32.07 695.7,-38.94"/>
+</g>
+</g>
+</svg>
