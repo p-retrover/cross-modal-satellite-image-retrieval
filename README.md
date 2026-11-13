@@ -1,5 +1,6 @@
 # Cross-Modal Satellite Image Retrieval
 
+**Traning pipeline:**
 <a href="https://youtu.be/CJNlx6B8aKc">
   <img src="animation/preview.gif" alt="traning pipeline" width="600">
 </a>
