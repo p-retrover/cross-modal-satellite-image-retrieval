@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Sentinel-1 vs Sentinel-2 Physics Explorer</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --paper: #f4eadd;
+      --ink: #1c1917;
+      --s1-cyan: #06b6d4;
+      --s2-yellow: #eab308;
+    }
+
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    
+    body {
+      margin: 0; overflow: hidden; background: var(--paper); color: var(--ink);
+      font-family: 'Space Grotesk', sans-serif;
+    }
+
+    /* Sketchy UI Panels */
+    .ink-panel {
+      background: #fffdfa;
+      border: 3px solid var(--ink);
+      box-shadow: 6px 6px 0px rgba(59, 130, 246, 0.15), 6px 6px 0px var(--ink);
+      border-radius: 8px;
+    }
+
+    .ink-btn {
+      background: #fffdfa; border: 2px solid var(--ink); box-shadow: 3px 3px 0px var(--ink);
+      border-radius: 6px; font-weight: 700; cursor: pointer; transition: all 0.1s;
+      display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+    }
+    .ink-btn:active { transform: translate(3px, 3px); box-shadow: 0px 0px 0px var(--ink); }
+    .ink-btn.action-btn { background: #fee2e2; border-color: #991b1b; color: #991b1b; }
+
+    /* Custom Checkboxes */
+    .ink-check-wrap { display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.85rem; font-weight: 700; }
+    .ink-check {
+      appearance: none; width: 20px; height: 20px; border: 2px solid var(--ink); border-radius: 4px;
+      background: #fffdfa; box-shadow: 2px 2px 0px var(--ink); cursor: pointer; position: relative;
+    }
+    .ink-check:checked::after {
+      content: '✔'; position: absolute; top: -2px; left: 2px; font-size: 14px; font-weight: bold; color: var(--ink);
+    }
+
+    /* HUD Typewriter text */
+    .mono-text { font-family: 'IBM Plex Mono', monospace; font-size: 0.8rem; }
+
+    /* Floating Labels */
+    .dielectric-label {
+      position: absolute; transform: translate(-50%, -50%);
+      background: rgba(255, 255, 255, 0.9); border: 2px dashed var(--ink);
+      padding: 4px 8px; border-radius: 4px; font-family: 'IBM Plex Mono', monospace;
+      font-weight: bold; font-size: 0.75rem; pointer-events: none; opacity: 0;
+      transition: opacity 0.3s; z-index: 10;
+    }
+    .dielectric-label.visible { opacity: 1; }
+
+    #canvas-container { position: fixed; inset: 0; cursor: grab; }
+    #canvas-container:active { cursor: grabbing; }
+
+    .fade-enter { animation: fadeIn 0.2s ease-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+  </style>
+</head>
+<body>
+  <div id="canvas-container"></div>
+  
+  <div id="labels-container">
+    <div id="lbl-water" class="dielectric-label">εr ≈ 80</div>
+    <div id="lbl-soil" class="dielectric-label">εr ≈ 3-5</div>
+  </div>
+
+  <!-- Top Controls Panel -->
+  <aside class="fixed top-4 left-4 z-20 ink-panel p-4 max-w-[280px] flex flex-col gap-4">
+    <div>
+      <h2 class="font-bold text-lg leading-tight mb-1">Satellites</h2>
+      <div class="flex flex-col gap-2 mt-2">
+        <label class="ink-check-wrap text-[#0891b2]">
+          <input type="checkbox" id="chk-s1" class="ink-check" checked> Sentinel-1 (SAR)
+        </label>
+        <label class="ink-check-wrap text-[#ca8a04]">
+          <input type="checkbox" id="chk-s2" class="ink-check"> Sentinel-2 (Optical)
+        </label>
+      </div>
+    </div>
+    
+    <div class="h-px w-full bg-[#1c1917]/20 border-b border-dashed border-[#1c1917]"></div>
+
+    <div>
+      <h2 class="font-bold text-lg leading-tight mb-1">Environment</h2>
+      <div class="flex flex-col gap-2 mt-2">
+        <label class="ink-check-wrap">
+          <input type="checkbox" id="chk-clouds" class="ink-check"> Cloud Cover
+        </label>
+        <label class="ink-check-wrap">
+          <input type="checkbox" id="chk-night" class="ink-check"> Night Mode
+        </label>
+        <label class="ink-check-wrap">
+          <input type="checkbox" id="chk-cutaway" class="ink-check"> See-Through (Dielectric)
+        </label>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Bottom HUD & Action Panel -->
+  <footer class="fixed bottom-4 left-1/2 -translate-x-1/2 z-20 w-[calc(100vw-2rem)] max-w-2xl ink-panel p-4 flex flex-col md:flex-row items-center gap-4">
+    <button id="btn-fire" class="ink-btn action-btn py-2 px-6 whitespace-nowrap text-lg w-full md:w-auto">
+      ⚡ Fire Pulse
+    </button>
+    <div class="flex-1 bg-[#1c1917] text-[#f4eadd] p-3 rounded border border-gray-600 w-full min-h-[4.5rem] flex items-center">
+      <div id="hud-text" class="mono-text leading-snug">System Standby. Select sensors and environment, then Fire Pulse.</div>
+    </div>
+  </footer>
+
+  <script>
+    // --- 1. THREE.JS SCENE SETUP ---
+    const container = document.getElementById('canvas-container');
+    const scene = new THREE.Scene();
+
+    // Orthographic Isometric Camera
+    const aspect = window.innerWidth / window.innerHeight;
+    const d = 8;
+    const camera = new THREE.OrthographicCamera(-d * aspect, d * aspect, d, -d, 1, 100);
+    camera.position.set(20, 20, 20);
+    camera.lookAt(0, 0, 0);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    container.appendChild(renderer.domElement);
+
+    // Flat Toon Shading Setup
+    const colors = new Uint8Array([100, 100, 100, 255, 200, 200, 200, 255, 255, 255, 255, 255]);
+    const gradientMap = new THREE.DataTexture(colors, 3, 1, THREE.RGBAFormat);
+    gradientMap.minFilter = THREE.NearestFilter;
+    gradientMap.magFilter = THREE.NearestFilter;
+    gradientMap.needsUpdate = true;
+
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+    scene.add(ambientLight);
+    const dirLight = new THREE.DirectionalLight(0xffffff, 0.6);
+    dirLight.position.set(10, 20, 10);
+    scene.add(dirLight);
+
+    // Storage for cutaway toggles
+    const outerMaterials = [];
+    const innerMeshes = [];
+    const dielectricTargets = { water: new THREE.Vector3(), soil: new THREE.Vector3() };
+
+    function createToonMaterial(color, opacity = 1) {
+      const mat = new THREE.MeshToonMaterial({
+        color: color, gradientMap: gradientMap,
+        transparent: true, opacity: opacity, side: THREE.DoubleSide
+      });
+      outerMaterials.push(mat);
+      return mat;
+    }
+
+    function addInkEdges(mesh, threshold = 15) {
+      const edges = new THREE.EdgesGeometry(mesh.geometry, threshold);
+      const line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0x1c1917, linewidth: 2 }));
+      mesh.add(line);
+      return mesh;
+    }
+
+    // --- 2. BUILD SCENE ELEMENTS ---
+    
+    // Flat Blue Cast Shadow Plane
+    const shadowPlane = new THREE.Mesh(
+      new THREE.PlaneGeometry(30, 30),
+      new THREE.MeshBasicMaterial({ color: 0x3b82f6, transparent: true, opacity: 0.1, depthWrite: false })
+    );
+    shadowPlane.rotation.x = -Math.PI / 2;
+    shadowPlane.position.y = -2;
+    scene.add(shadowPlane);
+
+    // Terrain Zones (Water, Forest, Urban)
+    const terrainGrp = new THREE.Group();
+    scene.add(terrainGrp);
+
+    // Zone 0: Calm Water (Left)
+    const waterBase = addInkEdges(new THREE.Mesh(new THREE.BoxGeometry(4, 1.5, 6), createToonMaterial(0x0284c7)));
+    waterBase.position.set(-4, -0.75, 0);
+    terrainGrp.add(waterBase);
+    
+    const waterCore = new THREE.Mesh(new THREE.BoxGeometry(3, 0.8, 5), new THREE.MeshBasicMaterial({ color: 0x0369a1 }));
+    waterCore.position.copy(waterBase.position);
+    waterCore.visible = false;
+    scene.add(waterCore);
+    innerMeshes.push(waterCore);
+    dielectricTargets.water.set(-4, 0, 0);
+
+    // Zone 1: Forest (Middle)
+    const soilBase = addInkEdges(new THREE.Mesh(new THREE.BoxGeometry(4, 1.5, 6), createToonMaterial(0x65a30d)));
+    soilBase.position.set(0, -0.75, 0);
+    terrainGrp.add(soilBase);
+
+    const soilCore = new THREE.Mesh(new THREE.BoxGeometry(3, 0.8, 5), new THREE.MeshBasicMaterial({ color: 0xb45309 }));
+    soilCore.position.copy(soilBase.position);
+    soilCore.visible = false;
+    scene.add(soilCore);
+    innerMeshes.push(soilCore);
+    dielectricTargets.soil.set(0, 0, 0);
+
+    // Trees
+    for(let i=0; i<4; i++) {
+      const x = -1 + Math.random()*2;
+      const z = -2 + Math.random()*4;
+      const trunk = addInkEdges(new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 0.4), createToonMaterial(0x78350f)));
+      trunk.position.set(x, 0.2, z);
+      const canopy = addInkEdges(new THREE.Mesh(new THREE.ConeGeometry(0.5, 1, 4), createToonMaterial(0x16a34a)));
+      canopy.position.set(0, 0.7, 0);
+      trunk.add(canopy);
+      terrainGrp.add(trunk);
+    }
+
+    // Zone 2: Urban (Right)
+    const urbanBase = addInkEdges(new THREE.Mesh(new THREE.BoxGeometry(4, 1.5, 6), createToonMaterial(0x94a3b8)));
+    urbanBase.position.set(4, -0.75, 0);
+    terrainGrp.add(urbanBase);
+
+    // Buildings
+    const bldgs = [
+      {x: 3.5, z: -1.5, w: 1, h: 2, d: 1}, {x: 4.8, z: -1.0, w: 1.2, h: 1.5, d: 1.2},
+      {x: 3.8, z: 1.5, w: 1.5, h: 1, d: 1.5}
+    ];
+    bldgs.forEach(b => {
+      const mesh = addInkEdges(new THREE.Mesh(new THREE.BoxGeometry(b.w, b.h, b.d), createToonMaterial(0xe2e8f0)));
+      mesh.position.set(b.x, b.h/2, b.z);
+      terrainGrp.add(mesh);
+    });
+
+    // Satellites
+    const s1Pos = new THREE.Vector3(-4, 6, 2);
+    const s1Grp = new THREE.Group();
+    s1Grp.position.copy(s1Pos);
+    const s1Body = addInkEdges(new THREE.Mesh(new THREE.BoxGeometry(1,1,1.5), createToonMaterial(0xd4d4d8)));
+    const s1Antenna = addInkEdges(new THREE.Mesh(new THREE.BoxGeometry(2.5, 0.1, 0.8), createToonMaterial(0x06b6d4)));
+    s1Antenna.position.set(0.5, -0.6, 0);
+    s1Antenna.rotation.z = Math.PI / 4; // Tilted toward terrain
+    s1Grp.add(s1Body, s1Antenna);
+    scene.add(s1Grp);
+
+    const s2Pos = new THREE.Vector3(4, 6, 2);
+    const s2Grp = new THREE.Group();
+    s2Grp.position.copy(s2Pos);
+    const s2Body = addInkEdges(new THREE.Mesh(new THREE.CylinderGeometry(0.6, 0.6, 1.5, 6), createToonMaterial(0xd4d4d8)));
+    s2Body.rotation.x = Math.PI / 2;
+    const s2Lens = addInkEdges(new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 0.2, 8), createToonMaterial(0x334155)));
+    s2Lens.position.set(0, -0.5, 0);
+    s2Lens.rotation.x = Math.PI / 2;
+    s2Grp.add(s2Body, s2Lens);
+    s2Grp.visible = false; // Default off
+    scene.add(s2Grp);
+
+    // Environment: Sun & Clouds
+    const sunPos = new THREE.Vector3(8, 8, -4);
+    const sun = addInkEdges(new THREE.Mesh(new THREE.IcosahedronGeometry(0.8, 1), new THREE.MeshBasicMaterial({color: 0xfacc15})));
+    sun.position.copy(sunPos);
+    scene.add(sun);
+
+    const cloudGrp = new THREE.Group();
+    cloudGrp.position.set(0, 3, 0);
+    for(let i=0; i<6; i++) {
+      const cx = -3 + Math.random()*6;
+      const cz = -2 + Math.random()*4;
+      const cr = 0.8 + Math.random()*0.5;
+      const cMesh = addInkEdges(new THREE.Mesh(new THREE.IcosahedronGeometry(cr, 1), createToonMaterial(0xffffff, 0.85)));
+      cMesh.position.set(cx, Math.random()*0.5, cz);
+      cloudGrp.add(cMesh);
+    }
+    cloudGrp.visible = false;
+    scene.add(cloudGrp);
+
+    // Targets for beams
+    const targets = [
+      new THREE.Vector3(-4, 0, 0), // Water
+      new THREE.Vector3(0, 0.2, 0),  // Forest
+      new THREE.Vector3(3.5, 0, 0)   // Urban Ground (near building)
+    ];
+
+    // --- 3. ANIMATION SYSTEM (PARTICLES) ---
+    let particles = [];
+    const particleGeo = new THREE.SphereGeometry(0.15, 8, 8);
+    const matS1 = new THREE.MeshBasicMaterial({ color: 0x06b6d4 }); // SAR Cyan
+    const matS2 = new THREE.MeshBasicMaterial({ color: 0xeab308 }); // Optical Yellow
+
+    function spawnParticle(start, end, mat, speed, onComplete) {
+      const mesh = new THREE.Mesh(particleGeo, mat);
+      mesh.position.copy(start);
+      scene.add(mesh);
+      particles.push({ mesh, start: start.clone(), end: end.clone(), progress: 0, speed, onComplete });
+    }
+
+    // --- 4. LOGIC & HUD ---
+    const hud = document.getElementById('hud-text');
+    function setHUD(text) {
+      hud.innerHTML = `<span class="fade-enter block">${text}</span>`;
+    }
+
+    function fireSAR(targetIdx) {
+      const t = targets[targetIdx];
+      setHUD(`Sentinel-1: Transmitting 5.405 GHz SAR Pulse to ${['Water', 'Forest', 'Urban'][targetIdx]}...`);
+      
+      spawnParticle(s1Pos, t, matS1, 0.03, (pMesh) => {
+        scene.remove(pMesh);
+        if(targetIdx === 0) {
+          // Water: Specular bounce away
+          setHUD("Calm Water | σº < -25 dB | Pitch Black | Specular Reflection (Radar bounces away)");
+          spawnParticle(t, t.clone().add(new THREE.Vector3(-4, 2, -2)), matS1, 0.04, (m) => scene.remove(m));
+        } else if (targetIdx === 1) {
+          // Forest: Volumetric scattering inside canopy
+          setHUD("Forest | VH Dominant | Canopy Volume | Volumetric Scattering");
+          for(let i=0; i<4; i++) {
+            const scatterTarget = t.clone().add(new THREE.Vector3(-1+Math.random()*2, 0.5+Math.random(), -1+Math.random()*2));
+            spawnParticle(t, scatterTarget, matS1, 0.05, (m) => scene.remove(m));
+          }
+        } else if (targetIdx === 2) {
+          // Urban: Double bounce back to sensor
+          setHUD("Urban Grid | σº > 0 dB | Bright Return | Double-Bounce Corner Reflector");
+          const wallTarget = t.clone().add(new THREE.Vector3(0, 1, -1.5)); // hit building wall
+          spawnParticle(t, wallTarget, matS1, 0.06, (m2) => {
+            scene.remove(m2);
+            spawnParticle(wallTarget, s1Pos, matS1, 0.04, (m3) => scene.remove(m3)); // return to sensor
+          });
+        }
+      });
+    }
+
+    function fireOptical(targetIdx) {
+      const t = targets[targetIdx];
+      const isNight = document.getElementById('chk-night').checked;
+      const isClouds = document.getElementById('chk-clouds').checked;
+
+      if(isNight) {
+        setHUD("Sentinel-2: 0% Reflectance (Signal Lost). Passive sensors require solar irradiance.");
+        return;
+      }
+
+      if(isClouds) {
+        setHUD("Sentinel-2: Attenuated by Cloud Cover. Optical rays scattered before reaching terrain.");
+        const cloudTop = new THREE.Vector3(0, 4, -1); // Hit center of clouds
+        spawnParticle(sunPos, cloudTop, matS2, 0.04, (m) => {
+          scene.remove(m);
+          for(let i=0; i<3; i++) {
+             spawnParticle(cloudTop, cloudTop.clone().add(new THREE.Vector3(-2+Math.random()*4, 2, -2+Math.random()*4)), matS2, 0.05, (ms) => scene.remove(ms));
+          }
+        });
+        return;
+      }
+
+      setHUD("Sentinel-2: Measuring passive solar reflectance (ρ_λ)...");
+      spawnParticle(sunPos, t, matS2, 0.03, (m) => {
+        scene.remove(m);
+        if(targetIdx === 0) {
+          setHUD("Water Body | High NIR Absorption | Dark in Optical Spectra");
+        } else if (targetIdx === 1) {
+          setHUD("Forest | Peak Reflectance | Chlorophyll (560 nm)");
+        } else if (targetIdx === 2) {
+          setHUD("Urban Grid | High Albedo | Broad Spectrum Reflectance");
+        }
+        spawnParticle(t, s2Pos, matS2, 0.03, (m2) => scene.remove(m2));
+      });
+    }
+
+    // --- 5. EVENT BINDINGS ---
+    document.getElementById('chk-s1').addEventListener('change', (e) => { s1Grp.visible = e.target.checked; });
+    document.getElementById('chk-s2').addEventListener('change', (e) => { s2Grp.visible = e.target.checked; });
+    
+    document.getElementById('chk-clouds').addEventListener('change', (e) => { 
+      cloudGrp.visible = e.target.checked; 
+      if(e.target.checked) setHUD("Clouds Enabled: Active SAR penetrates. Passive Optical blocked.");
+    });
+    
+    document.getElementById('chk-night').addEventListener('change', (e) => {
+      sun.visible = !e.target.checked;
+      ambientLight.intensity = e.target.checked ? 0.2 : 0.7;
+      dirLight.intensity = e.target.checked ? 0.0 : 0.6;
+      if(e.target.checked) setHUD("Night Mode: Passive Optical disabled. Active SAR fully operational.");
+      else setHUD("Day Mode: Restored solar irradiance.");
+    });
+
+    document.getElementById('chk-cutaway').addEventListener('change', (e) => {
+      const isSeeThrough = e.target.checked;
+      outerMaterials.forEach(mat => {
+        mat.opacity = isSeeThrough ? 0.25 : 1.0;
+        mat.depthWrite = !isSeeThrough;
+      });
+      innerMeshes.forEach(mesh => mesh.visible = isSeeThrough);
+      
+      document.getElementById('lbl-water').classList.toggle('visible', isSeeThrough);
+      document.getElementById('lbl-soil').classList.toggle('visible', isSeeThrough);
+      if(isSeeThrough) setHUD("Dielectric Strata Revealed: High contrast between Water (εr≈80) and Soil (εr≈4).");
+    });
+
+    document.getElementById('btn-fire').addEventListener('click', () => {
+      const s1On = document.getElementById('chk-s1').checked;
+      const s2On = document.getElementById('chk-s2').checked;
+      const targetIdx = Math.floor(Math.random() * 3); // Randomly pick Water, Forest, or Urban
+
+      if(!s1On && !s2On) {
+        setHUD("Error: No sensors active."); return;
+      }
+
+      // If both on, alternate or sequence them visually. For clarity, sequence S1 then S2.
+      if(s1On) fireSAR(targetIdx);
+      if(s2On) {
+        if(s1On) setTimeout(() => fireOptical(targetIdx), 1500); // Delay optical if both fired
+        else fireOptical(targetIdx);
+      }
+    });
+
+    // Simple Orbit Controls via mouse drag
+    let isDragging = false;
+    let previousMousePosition = { x: 0, y: 0 };
+    container.addEventListener('pointerdown', (e) => { isDragging = true; previousMousePosition = { x: e.offsetX, y: e.offsetY }; });
+    window.addEventListener('pointerup', () => { isDragging = false; });
+    window.addEventListener('pointermove', (e) => {
+      if (!isDragging) return;
+      const deltaX = e.offsetX - previousMousePosition.x;
+      const deltaY = e.offsetY - previousMousePosition.y;
+      
+      const angle = deltaX * 0.01;
+      const x = camera.position.x * Math.cos(angle) - camera.position.z * Math.sin(angle);
+      const z = camera.position.x * Math.sin(angle) + camera.position.z * Math.cos(angle);
+      camera.position.x = x;
+      camera.position.z = z;
+      
+      camera.position.y = Math.max(5, Math.min(40, camera.position.y + deltaY * 0.1));
+      camera.lookAt(0,0,0);
+      
+      previousMousePosition = { x: e.offsetX, y: e.offsetY };
+    });
+
+    window.addEventListener('resize', () => {
+      const aspect = window.innerWidth / window.innerHeight;
+      camera.left = -d * aspect; camera.right = d * aspect;
+      camera.top = d; camera.bottom = -d;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    // --- 6. RENDER LOOP ---
+    function updateLabels() {
+      const isSeeThrough = document.getElementById('chk-cutaway').checked;
+      if(!isSeeThrough) return;
+      
+      const hw = window.innerWidth / 2;
+      const hh = window.innerHeight / 2;
+
+      // Map 3D targets to 2D screen space
+      const pWater = dielectricTargets.water.clone().project(camera);
+      document.getElementById('lbl-water').style.left = `${(pWater.x * hw) + hw}px`;
+      document.getElementById('lbl-water').style.top = `${-(pWater.y * hh) + hh}px`;
+
+      const pSoil = dielectricTargets.soil.clone().project(camera);
+      document.getElementById('lbl-soil').style.left = `${(pSoil.x * hw) + hw}px`;
+      document.getElementById('lbl-soil').style.top = `${-(pSoil.y * hh) + hh}px`;
+    }
+
+    function animate() {
+      requestAnimationFrame(animate);
+
+      // Float satellites
+      const time = Date.now() * 0.002;
+      s1Grp.position.y = s1Pos.y + Math.sin(time) * 0.2;
+      s2Grp.position.y = s2Pos.y + Math.cos(time) * 0.2;
+
+      // Update Particles (Linear interpolation)
+      for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.progress += p.speed;
+        if (p.progress >= 1) {
+          p.onComplete(p.mesh);
+          particles.splice(i, 1);
+        } else {
+          p.mesh.position.lerpVectors(p.start, p.end, p.progress);
+        }
+      }
+
+      updateLabels();
+      renderer.render(scene, camera);
+    }
+
+    animate();
+  </script>
+</body>
+</html>

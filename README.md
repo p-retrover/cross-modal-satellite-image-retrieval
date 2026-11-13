@@ -1,6 +1,8 @@
 # Cross-Modal Satellite Image Retrieval
 
-![Training Pipeline Architecture](images/training_pipeline_final.svg)
+<a href="https://youtu.be/CJNlx6B8aKc">
+  <img src="animation/preview.gif" alt="traning pipeline" width="600">
+</a>
 
 ## Project Overview
 
