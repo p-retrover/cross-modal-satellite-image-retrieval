@@ -5,6 +5,14 @@
   <img src="animation/preview.gif" alt="traning pipeline" width="600">
 </a>
 
+**Interactive Demos**
+
+## Interactive Demos
+
+| Demo | Preview | Live Link |
+| :--- | :--- | :--- |
+| **Satellite Physics** | [![Particle Demo](images/satellite_physics.png)](https://github.io) | [Launch Demo →](https://p-retrover.github.io/cross-modal-satellite-image-retrieval/demos/sentinel_1_vs_sentinel_2_isometric_technical_figure) |
+
 ## Project Overview
 
 This repository contains the codebase, research artifacts, and technical article for **Cross-Modal Satellite Image Retrieval**. The project aligns heterogeneous Sentinel-1 Synthetic Aperture Radar (SAR) and Sentinel-2 optical imagery into a shared, modality-agnostic latent space.
