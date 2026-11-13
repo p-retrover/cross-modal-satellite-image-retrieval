@@ -1,0 +1,1585 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>§4.4.2 Schematic — Jaccard False-Negative Gate & 2-D Great-Circle Section of S²⁵⁵</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --paper: #f4ece4;
+      --ink: #1a1a1a;
+      --cast-shadow: #c5d1db;
+      --sar-cyan: #0072B2;
+      --opt-gold: #E69F00;
+      --true-neg-green: #2ca02c;
+      --gate-purple: #762a83;
+      --repel-red: #d32f2f;
+    }
+
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
+
+    body {
+      margin: 0;
+      overflow: hidden;
+      background-color: var(--paper);
+      background-image:
+        radial-gradient(rgba(26, 26, 26, 0.05) 1px, transparent 0),
+        radial-gradient(rgba(26, 26, 26, 0.03) 1px, transparent 0);
+      background-size: 24px 24px;
+      background-position: 0 0, 12px 12px;
+      color: var(--ink);
+      font-family: 'Space Grotesk', sans-serif;
+      transition: background-color 0.25s ease;
+    }
+
+    #canvas-container {
+      position: fixed;
+      inset: 0;
+      cursor: grab;
+      z-index: 1;
+    }
+    #canvas-container:active { cursor: grabbing; }
+
+    .ink-card {
+      background: rgba(255, 253, 249, 0.96);
+      border: 2.5px solid var(--ink);
+      box-shadow: 5px 5px 0px var(--ink);
+      border-radius: 9px;
+      transition: transform 0.2s ease, opacity 0.2s ease;
+    }
+
+    .ink-btn {
+      background: #fffdf9;
+      border: 2px solid var(--ink);
+      box-shadow: 2.5px 2.5px 0px var(--ink);
+      border-radius: 6px;
+      font-weight: 700;
+      font-size: 0.72rem;
+      cursor: pointer;
+      transition: transform 0.08s ease, box-shadow 0.08s ease, background-color 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.3rem;
+    }
+    .ink-btn:hover { background: #f8f1e7; }
+    .ink-btn:active {
+      transform: translate(2px, 2px);
+      box-shadow: 0px 0px 0px var(--ink);
+    }
+    .ink-btn.active-gate {
+      background: #762a83;
+      color: #ffffff;
+    }
+    .ink-btn.bypassed-gate {
+      background: #d32f2f;
+      color: #ffffff;
+    }
+    .ink-btn.pulse-action {
+      background: #fde047;
+      color: #1a1a1a;
+    }
+    .ink-btn.scenario-active {
+      background: #1a1a1a;
+      color: #fef08a;
+    }
+
+    .mono { font-family: 'IBM Plex Mono', monospace; }
+
+    .bit-cell {
+      width: 21px;
+      height: 22px;
+      border: 1.5px solid var(--ink);
+      border-radius: 4px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: transform 0.06s ease, background-color 0.1s ease;
+    }
+    .bit-cell:hover { transform: translateY(-1px); }
+    .bit-cell.bit-on-yi { background: #0072B2; color: #fff; }
+    .bit-cell.bit-on-yj { background: #762a83; color: #fff; }
+    .bit-cell.bit-both { box-shadow: inset 0 0 0 2px #fde047; }
+    .bit-cell.bit-off { background: #e7dec8; color: #57534e; }
+
+    input[type="range"].ink-slider {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 8px;
+      background: #e5dccb;
+      border: 2px solid var(--ink);
+      border-radius: 999px;
+      outline: none;
+    }
+    input[type="range"].ink-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 16px;
+      height: 16px;
+      background: #762a83;
+      border: 2px solid var(--ink);
+      border-radius: 50%;
+      cursor: pointer;
+      box-shadow: 1.5px 1.5px 0px var(--ink);
+    }
+
+    .swatch {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: 2px solid var(--ink);
+      cursor: pointer;
+    }
+    .swatch.selected { box-shadow: 0 0 0 2px #fff, 0 0 0 3.5px var(--ink); }
+
+    .callout-label {
+      position: fixed;
+      transform: translate(-50%, -50%);
+      background: rgba(255, 253, 249, 0.95);
+      border: 2px solid var(--ink);
+      box-shadow: 2.5px 2.5px 0px var(--ink);
+      padding: 2px 6px;
+      border-radius: 5px;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 10px;
+      font-weight: 700;
+      pointer-events: none;
+      z-index: 15;
+      white-space: nowrap;
+      transition: opacity 0.2s ease;
+    }
+    .callout-cutaway {
+      background: #1a1a1a;
+      color: #fef08a;
+      border: 2px solid #1a1a1a;
+      font-size: 9.5px;
+    }
+
+    .telemetry-table th, .telemetry-table td {
+      border: 1.5px solid var(--ink);
+      padding: 2px 4px;
+      text-align: right;
+      font-size: 10px;
+    }
+    .telemetry-table th {
+      background: #e9dfd1;
+      text-align: center;
+      font-weight: 700;
+    }
+    .telemetry-table td:first-child {
+      text-align: left;
+      font-weight: 700;
+    }
+
+    .drawer-collapsed .drawer-body {
+      display: none !important;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 3D WebGL Canvas -->
+  <div id="canvas-container"></div>
+
+  <!-- TOP EQUATION & SECTION BANNER (Always visible unless UI hidden) -->
+  <header id="top-banner" class="fixed top-2.5 left-1/2 -translate-x-1/2 z-20 ink-card px-3 py-1.5 max-w-[96vw] flex flex-wrap items-center justify-between gap-3">
+    <div class="flex items-center gap-2">
+      <span class="mono text-[10px] px-1.5 py-0.5 bg-[#1a1a1a] text-[#fef08a] rounded font-bold">§4.4.2 SCHEMATIC</span>
+      <span class="text-xs sm:text-sm font-bold tracking-tight">Jaccard False-Negative Gate &amp; 2-D Great-Circle Section of S²⁵⁵</span>
+    </div>
+    <div class="mono text-[10px] sm:text-[11px] bg-[#f4ece4] px-2 py-0.5 rounded border border-[#1a1a1a] font-semibold">
+      l<sub>i,m</sub> = -10⁹ if (m≠i ∧ Gate ∧ IoU&gt;0.40) else s<sub>m</sub>/τ &nbsp;|&nbsp; L<sub>i</sub> = -log P<sub>i,i</sub> &nbsp;|&nbsp; Δθ<sub>m</sub> = -η (∂L<sub>i</sub>/∂s<sub>m</sub>) sin θ<sub>m</sub>
+    </div>
+    <div class="flex items-center gap-1.5">
+      <button id="btn-hide-ui" class="ink-btn px-2 py-0.5 text-[10px]" title="Toggle Side Panels to Inspect 3D Centrifuge">
+        👁️ Hide Panels
+      </button>
+    </div>
+  </header>
+
+  <!-- 3D Projected Vector & Force Callouts on the Great-Circle Section -->
+  <div id="labels-layer">
+    <div id="lbl-anchor" class="callout-label text-[#0072B2]">
+      u_i (Online θ_q): θ=0.0°
+    </div>
+    <div id="lbl-pos" class="callout-label text-[#b45309]">
+      v_i⁺ (EMA θ_k): s=+0.820 | ‖∇_S‖=0.005
+    </div>
+    <div id="lbl-falseneg" class="callout-label text-[#762a83]">
+      v_j (EMA θ_k): s=+0.760 | ‖∇_S‖=0.000
+    </div>
+    <div id="lbl-trueneg1" class="callout-label text-[#15803d]">
+      v_k⁻ (EMA θ_k): s=-0.150 | ‖∇_S‖=0.001
+    </div>
+    <div id="lbl-trueneg2" class="callout-label text-[#475569]">
+      v_m⁻ (EMA θ_k): s=+0.100 | ‖∇_S‖=0.007
+    </div>
+
+    <!-- Cutaway Anatomical Callouts -->
+    <div id="cut-1" class="callout-label callout-cutaway opacity-0">
+      ① 10-Bit Sketch Scanner of 43-Class CORINE Vector
+    </div>
+    <div id="cut-2" class="callout-label callout-cutaway opacity-0">
+      ② Jaccard Shunt Gate (Strict IoU &gt; 0.40 → l_ij = -10⁹)
+    </div>
+    <div id="cut-3" class="callout-label callout-cutaway opacity-0">
+      ③ 2-D Great-Circle Section of S²⁵⁵ (u_i at North Pole)
+    </div>
+    <div id="cut-4" class="callout-label callout-cutaway opacity-0">
+      ④ Temperature Valve &amp; Gauge (τ ∈ [0.05, 0.40])
+    </div>
+    <div id="cut-5" class="callout-label callout-cutaway opacity-0">
+      ⑤ Repulsion Coils (Energized ∝ P_im / τ)
+    </div>
+  </div>
+
+  <!-- LEFT DRAWER: Interactive CORINE 10-Bit Sketch & Riemannian Stepper -->
+  <aside id="left-drawer" class="fixed top-14 left-3 z-20 ink-card p-2.5 w-[330px] max-w-[calc(100vw-1.5rem)] flex flex-col gap-2 max-h-[calc(100vh-4.2rem)] overflow-y-auto">
+    <div class="flex items-center justify-between border-b-2 border-[#1a1a1a] pb-1.5">
+      <div class="flex items-center gap-1.5">
+        <span class="w-2.5 h-2.5 rounded-full bg-[#762a83] border border-black"></span>
+        <h2 class="text-xs font-bold uppercase tracking-tight">Gate &amp; 10-Bit CORINE Sketch</h2>
+      </div>
+      <div class="flex items-center gap-1">
+        <button class="swatch selected" style="background:#f4ece4" data-paper="#f4ece4" data-casing="#64748b" title="Warm Cream"></button>
+        <button class="swatch" style="background:#e8eef2" data-paper="#e8eef2" data-casing="#475569" title="Blueprint Ice"></button>
+        <button id="toggle-left" class="ink-btn px-1.5 py-0.5 text-[10px] ml-1">[–]</button>
+      </div>
+    </div>
+
+    <div class="drawer-body flex flex-col gap-2">
+      <!-- 1. Gate Mode & Cutaway Toggles -->
+      <div class="flex gap-1.5">
+        <button id="btn-gate-toggle" class="ink-btn active-gate flex-1 py-1.5 px-2">
+          <span id="gate-dot" class="w-2 h-2 rounded-full bg-amber-300 border border-black"></span>
+          <span id="gate-btn-text">Jaccard Gate: ARMED</span>
+        </button>
+        <button id="btn-cutaway" class="ink-btn py-1.5 px-2">
+          🔍 Cutaway
+        </button>
+      </div>
+
+      <!-- 2. Bit-Verified CORINE Presets -->
+      <div class="bg-[#f4ece4]/90 border-2 border-[#1a1a1a] rounded-md p-2 flex flex-col gap-1.5">
+        <div class="flex justify-between items-center">
+          <span class="mono text-[9.5px] font-bold uppercase text-stone-700">10-Bit Sketch of 43-D CORINE</span>
+          <span id="scenario-tag" class="mono text-[9.5px] font-bold px-1.5 py-0.2 bg-purple-200 border border-black rounded">4/6 = 0.667</span>
+        </div>
+
+        <div class="grid grid-cols-2 gap-1">
+          <button class="ink-btn scenario-btn scenario-active py-1 px-1 text-[10px]" data-batch="A">
+            A: Urban (4/6 = 0.67)
+          </button>
+          <button class="ink-btn scenario-btn py-1 px-1 text-[10px]" data-batch="B">
+            B: Forest (3/6 = 0.50)
+          </button>
+          <button class="ink-btn scenario-btn py-1 px-1 text-[10px]" data-batch="C">
+            C: Boundary (2/5 = 0.40)
+          </button>
+          <button class="ink-btn scenario-btn py-1 px-1 text-[10px]" data-batch="D">
+            D: Pasture (1/6 = 0.17)
+          </button>
+        </div>
+
+        <!-- Clickable 10-Bit Strips (Computes Exact Set-Theoretic IoU Live!) -->
+        <div class="pt-1 border-t border-dashed border-[#1a1a1a]/30 flex flex-col gap-1">
+          <div class="flex items-center justify-between">
+            <span class="mono text-[10px] font-bold text-[#0072B2]">Y_i (SAR):</span>
+            <div id="strip-yi" class="flex gap-0.5"></div>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="mono text-[10px] font-bold text-[#762a83]">Y_j (Cand):</span>
+            <div id="strip-yj" class="flex gap-0.5"></div>
+          </div>
+          <div class="flex justify-between items-center mono text-[10px] mt-0.5 pt-1 border-t border-[#1a1a1a]/20">
+            <span id="set-counts" class="text-stone-700 font-semibold">|Y_i∩Y_j|=4, |Y_i∪Y_j|=6</span>
+            <span id="iou-readout" class="font-bold px-1.5 py-0.2 rounded bg-[#762a83] text-white">IoU = 0.667 &gt; 0.40</span>
+          </div>
+          <div class="mono text-[9px] text-stone-600 italic">
+            ↑ Click any bit above to toggle &amp; recompute exact Jaccard IoU
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. Temperature & Stated Angular Learning Rate -->
+      <div class="bg-[#fffdf9] border-2 border-[#1a1a1a] rounded-md p-2 flex flex-col gap-1.5">
+        <div class="flex justify-between items-center mono text-[10px]">
+          <span class="font-bold">Temperature Valve (τ):</span>
+          <span id="tau-readout" class="font-bold px-1.5 py-0.2 rounded bg-amber-200 border border-black">τ = 0.10</span>
+        </div>
+        <input id="slider-tau" type="range" min="0.05" max="0.40" step="0.01" value="0.10" class="ink-slider" />
+
+        <div class="flex justify-between items-center mono text-[10px] mt-0.5">
+          <span class="font-bold">Riemannian Step Size (η_θ):</span>
+          <span id="eta-readout" class="font-bold px-1.5 py-0.2 rounded bg-sky-100 border border-black">η = 0.025 rad</span>
+        </div>
+        <input id="slider-eta" type="range" min="0.005" max="0.060" step="0.005" value="0.025" class="ink-slider" />
+
+        <div class="flex justify-between items-center pt-1 border-t border-dashed border-[#1a1a1a]/30">
+          <span class="mono text-[9.5px] font-bold uppercase text-stone-700">Exact Geodesic Update</span>
+          <span id="step-counter" class="mono text-[10px] font-bold px-1.5 py-0.2 bg-[#1a1a1a] text-[#fde047] rounded">Step: 0</span>
+        </div>
+
+        <button id="btn-pulse" class="ink-btn pulse-action w-full py-1.5 px-2 text-xs">
+          ⚡ STEP RIEMANNIAN GRADIENT (+1)
+        </button>
+
+        <div class="flex gap-1">
+          <button id="btn-autostep" class="ink-btn flex-1 py-1 px-1.5 text-[10.5px] bg-amber-100">
+            ⏩ Auto-Step 5x
+          </button>
+          <button id="btn-reset" class="ink-btn py-1 px-2 text-[10.5px] bg-stone-200">
+            ↺ Reset S²⁵⁵
+          </button>
+        </div>
+      </div>
+
+      <!-- Narrative Audit Box -->
+      <div id="narrative-box" class="bg-emerald-50 border-2 border-[#1a1a1a] rounded-md p-2 mono text-[10px] leading-snug">
+        <div class="font-bold text-emerald-900 uppercase" id="narrative-title">✓ JACCARD SHUNT ARMED (M_ij = 1)</div>
+        <div id="narrative-body" class="text-stone-800 mt-0.5">
+          IoU = 4/6 = 0.667 &gt; 0.40: l_ij = -10⁹ ⇒ P_ij = 0 ⇒ ∂L/∂s_j = 0.0000. Candidate v_j experiences Δθ_j = 0.0000 rad (zero motion).
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- RIGHT DRAWER: Exact Softmax, Riemannian Gradient & Counterfactual Telemetry -->
+  <section id="right-drawer" class="fixed bottom-3 right-3 z-20 ink-card p-2.5 w-[530px] max-w-[calc(100vw-1.5rem)] flex flex-col gap-2 max-h-[calc(100vh-4.2rem)] overflow-y-auto">
+    <div class="flex items-center justify-between border-b-2 border-[#1a1a1a] pb-1.5">
+      <div class="flex items-center gap-1.5">
+        <span class="w-2.5 h-2.5 rounded-full bg-[#0072B2] border border-black inline-block"></span>
+        <h2 class="font-bold text-xs uppercase tracking-tight">4-Way Softmax &amp; Great-Circle Tangent Gradients</h2>
+      </div>
+      <div class="flex items-center gap-1.5">
+        <span id="hud-mode-badge" class="mono text-[9.5px] font-bold px-1.5 py-0.5 rounded bg-emerald-700 text-white border border-black">
+          MASKED (M_ij = 1)
+        </span>
+        <button id="toggle-right" class="ink-btn px-1.5 py-0.5 text-[10px]">[–]</button>
+      </div>
+    </div>
+
+    <div class="drawer-body flex flex-col gap-2">
+      <!-- EMA Target & Great Circle Section Clarification Strip -->
+      <div class="flex flex-wrap justify-between items-center bg-[#f4ece4]/90 px-2 py-1 rounded border border-[#1a1a1a] mono text-[9.5px]">
+        <span><b>Anchor u_i:</b> Online Query (θ_q) at θ=0°</span>
+        <span><b>Keys {v_m}:</b> EMA Target (θ_k ← 0.996θ_k + 0.004θ_q, stop-grad)</span>
+      </div>
+
+      <!-- Exact 1x4 Softmax & Riemannian Tangent Gradient Table -->
+      <div class="overflow-x-auto">
+        <table class="w-full border-collapse telemetry-table mono">
+          <thead>
+            <tr>
+              <th>Key Vector v_m</th>
+              <th>Angle θ_m</th>
+              <th>s_m = cos θ_m</th>
+              <th>Gated l_im</th>
+              <th>Softmax P_im</th>
+              <th>∂L_i / ∂s_m</th>
+              <th>‖∇_S L_i‖</th>
+              <th>Step Δs_m</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="bg-sky-50">
+              <td class="text-[#0072B2]">v_i⁺ (Pos Pair)</td>
+              <td id="t-pos-ang">34.9°</td>
+              <td id="t-pos-sim">+0.8200</td>
+              <td id="t-pos-mask">+8.20</td>
+              <td id="t-pos-prob" class="font-bold text-emerald-800">0.9991</td>
+              <td id="t-pos-dlds" class="text-[#0072B2]">-0.0093</td>
+              <td id="t-pos-grad" class="font-bold text-[#0072B2]">0.0053</td>
+              <td id="t-pos-ds" class="font-bold text-[#0072B2]">+0.0001</td>
+            </tr>
+            <tr id="row-cand" class="bg-purple-100">
+              <td class="text-[#762a83]" id="t-cand-name">v_j (Urban #2)</td>
+              <td id="t-cand-ang">40.5°</td>
+              <td id="t-cand-sim" class="font-bold">+0.7600</td>
+              <td id="t-cand-mask" class="font-bold text-[#762a83]">-10⁹ (SHUNT)</td>
+              <td id="t-cand-prob" class="font-bold">0.0000</td>
+              <td id="t-cand-dlds" class="font-bold text-emerald-700">0.0000</td>
+              <td id="t-cand-grad" class="font-bold text-emerald-700">0.0000</td>
+              <td id="t-cand-ds" class="font-bold text-emerald-700">0.0000</td>
+            </tr>
+            <tr class="bg-stone-50">
+              <td class="text-[#15803d]">v_k⁻ (True Neg 1)</td>
+              <td id="t-neg1-ang">98.6°</td>
+              <td id="t-neg1-sim">-0.1500</td>
+              <td id="t-neg1-mask">-1.50</td>
+              <td id="t-neg1-prob">0.0001</td>
+              <td id="t-neg1-dlds" class="text-[#d32f2f]">+0.0006</td>
+              <td id="t-neg1-grad" class="text-[#d32f2f]">0.0006</td>
+              <td id="t-neg1-ds" class="text-[#d32f2f]">-0.0000</td>
+            </tr>
+            <tr class="bg-stone-50">
+              <td class="text-stone-700">v_m⁻ (True Neg 2)</td>
+              <td id="t-neg2-ang">84.3°</td>
+              <td id="t-neg2-sim">+0.1000</td>
+              <td id="t-neg2-mask">+1.00</td>
+              <td id="t-neg2-prob">0.0007</td>
+              <td id="t-neg2-dlds" class="text-[#d32f2f]">+0.0075</td>
+              <td id="t-neg2-grad" class="text-[#d32f2f]">0.0074</td>
+              <td id="t-neg2-ds" class="text-[#d32f2f]">-0.0002</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Verifiable Mathematical Quantities (Replaces Fake F1 Proxy) -->
+      <div class="grid grid-cols-2 gap-1.5 mono text-[10px]">
+        <div class="border-2 border-[#1a1a1a] rounded p-1.5 bg-amber-50/80">
+          <div class="text-[9px] font-bold text-stone-600 uppercase">1. One-Sided Loss L_i = -log P(v_i⁺)</div>
+          <div class="flex justify-between mt-0.5">
+            <span>Armed (Masked):</span>
+            <span id="cf-masked-loss" class="font-bold text-emerald-800">0.0009 nats</span>
+          </div>
+          <div class="flex justify-between">
+            <span>Bypassed (Unmasked):</span>
+            <span id="cf-std-loss" class="font-bold text-[#d32f2f]">0.4376 nats</span>
+          </div>
+        </div>
+
+        <div class="border-2 border-[#1a1a1a] rounded p-1.5 bg-purple-50/80">
+          <div class="text-[9px] font-bold text-stone-600 uppercase">2. Candidate v_j Repulsion Share &amp; Drift</div>
+          <div class="flex justify-between mt-0.5">
+            <span>Denominator Share P_ij:</span>
+            <span id="metric-pij" class="font-bold text-[#762a83]">0.00% (Blocked)</span>
+          </div>
+          <div class="flex justify-between">
+            <span>Cumul. Δcos θ_j from init:</span>
+            <span id="metric-intraclass-sub" class="font-bold text-stone-800">+0.0000 (0 steps)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Static Reference Footnote to Full-Corpus Report Benchmark (§5.2) -->
+      <div class="bg-[#e9dfd1] border border-[#1a1a1a] rounded px-2 py-1 mono text-[9px] text-stone-700 flex flex-wrap justify-between gap-1">
+        <span><b>Note:</b> Above solves exact 4-sample dynamics on a 2-D section of S²⁵⁵.</span>
+        <span><b>Report §5.2 Full-Corpus FAISS (B=32):</b> Test F1@5 = 0.7316 (Masked) vs 0.7309 (Unmasked).</span>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    window.onload = function () {
+      // =========================================================================
+      // 1. THREE.JS ISOMETRIC SCENE & TOON SHADING ENGINE
+      // =========================================================================
+      const container = document.getElementById('canvas-container');
+      const scene = new THREE.Scene();
+
+      let aspect = window.innerWidth / window.innerHeight;
+      let viewSize = 8.6;
+      const camera = new THREE.OrthographicCamera(
+        -viewSize * aspect, viewSize * aspect,
+        viewSize, -viewSize,
+        -50, 100
+      );
+
+      let camAzimuth = Math.PI / 4;
+      let camElevation = Math.atan(1 / Math.sqrt(2));
+      let camRadius = 24;
+      const camTarget = new THREE.Vector3(0.0, 0.25, 0);
+
+      function updateCameraTransform() {
+        camera.position.x = camTarget.x + camRadius * Math.cos(camElevation) * Math.sin(camAzimuth);
+        camera.position.y = camTarget.y + camRadius * Math.sin(camElevation);
+        camera.position.z = camTarget.z + camRadius * Math.cos(camElevation) * Math.cos(camAzimuth);
+        camera.lookAt(camTarget);
+        camera.updateProjectionMatrix();
+      }
+      updateCameraTransform();
+
+      const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      container.appendChild(renderer.domElement);
+
+      const toonBands = new Uint8Array([
+        115, 115, 115, 255,
+        195, 195, 195, 255,
+        255, 255, 255, 255
+      ]);
+      const gradientMap = new THREE.DataTexture(toonBands, 3, 1, THREE.RGBAFormat);
+      gradientMap.minFilter = THREE.NearestFilter;
+      gradientMap.magFilter = THREE.NearestFilter;
+      gradientMap.needsUpdate = true;
+
+      scene.add(new THREE.AmbientLight(0xffffff, 0.75));
+      const keyLight = new THREE.DirectionalLight(0xffffff, 0.68);
+      keyLight.position.set(14, 24, 16);
+      scene.add(keyLight);
+
+      const casingMaterials = [];
+      const primaryCasingMaterials = [];
+
+      function makeCelMaterial(hexColor, isCasing = false, isPrimaryCasing = false, customOpacity = 1.0) {
+        const mat = new THREE.MeshToonMaterial({
+          color: hexColor,
+          gradientMap: gradientMap,
+          transparent: isCasing || customOpacity < 1.0,
+          opacity: customOpacity,
+          side: THREE.DoubleSide
+        });
+        if (isCasing) casingMaterials.push({ mat, baseOpacity: customOpacity });
+        if (isPrimaryCasing) primaryCasingMaterials.push(mat);
+        return mat;
+      }
+
+      function inkify(mesh, thresholdAngle = 18, lineColor = 0x1a1a1a, opacity = 1.0) {
+        const edges = new THREE.EdgesGeometry(mesh.geometry, thresholdAngle);
+        const lineMat = new THREE.LineBasicMaterial({
+          color: lineColor,
+          transparent: opacity < 1.0,
+          opacity: opacity
+        });
+        const line = new THREE.LineSegments(edges, lineMat);
+        mesh.add(line);
+        return mesh;
+      }
+
+      // =========================================================================
+      // 2. BUILD THE CENTRIFUGE & GREAT-CIRCLE SECTION OF S^255
+      // =========================================================================
+      const machineRoot = new THREE.Group();
+      scene.add(machineRoot);
+
+      // Flat Blue Isometric Cast Shadow (#c5d1db)
+      const shadowGroup = new THREE.Group();
+      shadowGroup.position.set(0.6, -3.58, 0.6);
+      const shadowMat = new THREE.MeshBasicMaterial({
+        color: 0xc5d1db,
+        transparent: true,
+        opacity: 0.88,
+        depthWrite: false
+      });
+      const mainShadowDisc = new THREE.Mesh(new THREE.CylinderGeometry(4.9, 4.9, 0.02, 32), shadowMat);
+      const chuteShadowBox = new THREE.Mesh(new THREE.BoxGeometry(3.2, 0.02, 2.6), shadowMat);
+      chuteShadowBox.position.set(-1.5, 0, -0.8);
+      shadowGroup.add(mainShadowDisc, chuteShadowBox);
+      machineRoot.add(shadowGroup);
+
+      // Pedestal
+      const basePedestal = inkify(new THREE.Mesh(
+        new THREE.CylinderGeometry(4.3, 4.6, 1.1, 16),
+        makeCelMaterial(0x64748b, true, true, 1.0)
+      ));
+      basePedestal.position.y = -3.0;
+      machineRoot.add(basePedestal);
+
+      const lowerRim = inkify(new THREE.Mesh(
+        new THREE.CylinderGeometry(4.0, 4.1, 0.45, 16),
+        makeCelMaterial(0x475569, true, true, 1.0)
+      ));
+      lowerRim.position.y = -2.25;
+      machineRoot.add(lowerRim);
+
+      // Temperature Scaling Valve & Analog Gauge Needle (tau)
+      const valveGroup = new THREE.Group();
+      valveGroup.position.set(3.3, -2.1, 2.2);
+      const valvePipe = inkify(new THREE.Mesh(
+        new THREE.CylinderGeometry(0.28, 0.28, 1.1, 10),
+        makeCelMaterial(0xd97706, false, false, 1.0)
+      ));
+      valvePipe.rotation.z = Math.PI / 2;
+      valvePipe.rotation.y = -Math.PI / 6;
+      const valveWheel = inkify(new THREE.Mesh(
+        new THREE.TorusGeometry(0.55, 0.12, 8, 16),
+        makeCelMaterial(0xdc2626, false, false, 1.0)
+      ), 25);
+      valveWheel.position.set(0.45, 0, 0.28);
+      valveWheel.rotation.y = Math.PI / 3;
+
+      // Pressure/Temperature Gauge Dial on Valve
+      const gaugeDial = inkify(new THREE.Mesh(
+        new THREE.CylinderGeometry(0.42, 0.42, 0.1, 16),
+        makeCelMaterial(0xfffdf9, false, false, 1.0)
+      ));
+      gaugeDial.position.set(0.15, 0.65, 0.1);
+      gaugeDial.rotation.x = Math.PI / 4;
+      const gaugeNeedle = inkify(new THREE.Mesh(
+        new THREE.BoxGeometry(0.06, 0.34, 0.06),
+        makeCelMaterial(0xdc2626, false, false, 1.0)
+      ));
+      gaugeNeedle.position.set(0, 0.08, 0.05);
+      gaugeDial.add(gaugeNeedle);
+
+      valveGroup.add(valvePipe, valveWheel, gaugeDial);
+      machineRoot.add(valveGroup);
+
+      // Equatorial Rotor Ring
+      const rotorRingGroup = new THREE.Group();
+      rotorRingGroup.position.y = 0.2;
+      machineRoot.add(rotorRingGroup);
+
+      const equatorialRing = inkify(new THREE.Mesh(
+        new THREE.TorusGeometry(3.45, 0.22, 10, 28),
+        makeCelMaterial(0x94a3b8, true, true, 1.0)
+      ), 22);
+      equatorialRing.rotation.x = Math.PI / 2;
+      rotorRingGroup.add(equatorialRing);
+
+      for (let i = 0; i < 8; i++) {
+        const angle = (i / 8) * Math.PI * 2;
+        const fin = inkify(new THREE.Mesh(
+          new THREE.BoxGeometry(0.35, 0.55, 0.18),
+          makeCelMaterial(0xeab308, true, false, 1.0)
+        ));
+        fin.position.set(Math.cos(angle) * 3.55, 0, Math.sin(angle) * 3.55);
+        fin.rotation.y = -angle;
+        rotorRingGroup.add(fin);
+      }
+
+      // Outer Protective Casing Shell
+      const outerCasingHemisphere = inkify(new THREE.Mesh(
+        new THREE.CylinderGeometry(3.55, 3.85, 2.3, 16, 1, true, Math.PI * 0.65, Math.PI * 1.15),
+        makeCelMaterial(0x64748b, true, true, 0.92)
+      ));
+      outerCasingHemisphere.position.y = -0.9;
+      machineRoot.add(outerCasingHemisphere);
+
+      // 2-D Great-Circle Section of S^255 Drum
+      const sphereCenter = new THREE.Vector3(0, 0.45, 0);
+      const sphereRadius = 2.85;
+
+      const hypersphereGroup = new THREE.Group();
+      hypersphereGroup.position.copy(sphereCenter);
+      machineRoot.add(hypersphereGroup);
+
+      const glassDrum = new THREE.Mesh(
+        new THREE.SphereGeometry(sphereRadius, 24, 18),
+        makeCelMaterial(0xbae6fd, true, false, 0.18)
+      );
+      hypersphereGroup.add(glassDrum);
+
+      // Highlighted 2-D Great-Circle Section Plane (XY Plane where all 5 vectors live!)
+      const sectionDiscGeo = new THREE.CircleGeometry(sphereRadius, 48);
+      const sectionDiscMat = new THREE.MeshBasicMaterial({
+        color: 0xfef08a,
+        transparent: true,
+        opacity: 0.18,
+        side: THREE.DoubleSide,
+        depthWrite: false
+      });
+      const sectionDisc = new THREE.Mesh(sectionDiscGeo, sectionDiscMat);
+      hypersphereGroup.add(sectionDisc);
+
+      // Heavy Ink Great-Circle Rim in XY Plane
+      const greatCircleTorus = inkify(new THREE.Mesh(
+        new THREE.TorusGeometry(sphereRadius, 0.045, 8, 48),
+        makeCelMaterial(0x1a1a1a, false, false, 1.0)
+      ), 30);
+      hypersphereGroup.add(greatCircleTorus);
+
+      const wireMat = new THREE.LineBasicMaterial({ color: 0x1a1a1a, transparent: true, opacity: 0.28 });
+      for (let i = 1; i < 3; i++) {
+        const ringGeo = new THREE.EdgesGeometry(new THREE.CylinderGeometry(sphereRadius, sphereRadius, 0.01, 32));
+        const ringLine = new THREE.LineSegments(ringGeo, wireMat);
+        if (i === 1) ringLine.rotation.x = Math.PI / 2;
+        if (i === 2) ringLine.rotation.z = Math.PI / 2;
+        hypersphereGroup.add(ringLine);
+      }
+
+      const originCore = inkify(new THREE.Mesh(
+        new THREE.SphereGeometry(0.24, 12, 12),
+        makeCelMaterial(0x1e293b, false, false, 1.0)
+      ), 30);
+      hypersphereGroup.add(originCore);
+
+      // Intake Chute & 10-Bit Sketch Scanner Archway
+      const scannerGroup = new THREE.Group();
+      scannerGroup.position.set(-2.35, 3.35, 0);
+      machineRoot.add(scannerGroup);
+
+      const scannerArch = inkify(new THREE.Mesh(
+        new THREE.BoxGeometry(1.55, 1.45, 1.65),
+        makeCelMaterial(0x475569, true, true, 1.0)
+      ));
+      scannerGroup.add(scannerArch);
+
+      const scannerBeam = new THREE.Mesh(
+        new THREE.BoxGeometry(1.62, 0.14, 1.35),
+        new THREE.MeshBasicMaterial({ color: 0xa855f7 })
+      );
+      scannerGroup.add(scannerBeam);
+
+      const intakeChute = inkify(new THREE.Mesh(
+        new THREE.BoxGeometry(2.1, 0.35, 1.15),
+        makeCelMaterial(0x94a3b8, true, false, 1.0)
+      ));
+      intakeChute.position.set(-1.35, 2.35, 0);
+      intakeChute.rotation.z = -Math.PI / 5;
+      machineRoot.add(intakeChute);
+
+      // Mechanical Jaccard IoU Guillotine Gate
+      const gateFrameGroup = new THREE.Group();
+      gateFrameGroup.position.set(-1.35, 1.25, 0);
+      machineRoot.add(gateFrameGroup);
+
+      const pillarGeo = new THREE.BoxGeometry(0.28, 2.8, 0.28);
+      const pillarMat = makeCelMaterial(0x334155, false, false, 1.0);
+      const pillarL = inkify(new THREE.Mesh(pillarGeo, pillarMat));
+      pillarL.position.set(0, 0.4, 0.68);
+      const pillarR = inkify(new THREE.Mesh(pillarGeo, pillarMat));
+      pillarR.position.set(0, 0.4, -0.68);
+      const pillarTop = inkify(new THREE.Mesh(new THREE.BoxGeometry(0.36, 0.32, 1.75), pillarMat));
+      pillarTop.position.set(0, 1.85, 0);
+      gateFrameGroup.add(pillarL, pillarR, pillarTop);
+
+      const guillotineBlade = new THREE.Group();
+      const bladePlate = inkify(new THREE.Mesh(
+        new THREE.BoxGeometry(0.22, 1.45, 1.22),
+        makeCelMaterial(0x762a83, false, false, 1.0)
+      ));
+      const bladeHazardStripe = inkify(new THREE.Mesh(
+        new THREE.BoxGeometry(0.26, 0.32, 1.24),
+        makeCelMaterial(0xeab308, false, false, 1.0)
+      ));
+      bladeHazardStripe.position.y = -0.5;
+      guillotineBlade.add(bladePlate, bladeHazardStripe);
+      gateFrameGroup.add(guillotineBlade);
+
+      // Electromagnetic Repulsion Coils
+      const southCoilMat = makeCelMaterial(0xdc2626, false, false, 1.0);
+      const southCoilGroup = new THREE.Group();
+      southCoilGroup.position.set(0, -2.35, 0);
+      for (let i = 0; i < 3; i++) {
+        const torus = inkify(new THREE.Mesh(
+          new THREE.TorusGeometry(0.75 - i * 0.14, 0.1, 8, 20),
+          southCoilMat
+        ), 25);
+        torus.rotation.x = Math.PI / 2;
+        torus.position.y = i * 0.22;
+        southCoilGroup.add(torus);
+      }
+      hypersphereGroup.add(southCoilGroup);
+
+      const fnCoilMat = makeCelMaterial(0xdc2626, false, false, 1.0);
+      const fnCoilGroup = new THREE.Group();
+      fnCoilGroup.position.set(-2.1, 0.3, 0);
+      fnCoilGroup.rotation.z = Math.PI / 2;
+      for (let i = 0; i < 2; i++) {
+        const torus = inkify(new THREE.Mesh(
+          new THREE.TorusGeometry(0.6 - i * 0.12, 0.09, 8, 18),
+          fnCoilMat
+        ), 25);
+        torus.rotation.x = Math.PI / 2;
+        torus.position.y = i * 0.2;
+        fnCoilGroup.add(torus);
+      }
+      hypersphereGroup.add(fnCoilGroup);
+
+      // =========================================================================
+      // 3. ALL 5 VECTORS ON THE 2-D GREAT-CIRCLE SECTION + TANGENT FORCE ARROWS
+      // =========================================================================
+      // Every vector lives strictly in the XY Great-Circle plane (z = 0) so angles
+      // and tangent forces match the 2-D section math 1-to-1.
+      // sideSign = +1 (left hemisphere, rotation.z > 0) or -1 (right hemisphere, rotation.z < 0)
+      function createGreatCircleProbe(colorHex, isBoxTile = true, arrowColorHex = 0xdc2626) {
+        const grp = new THREE.Group();
+        const shaftGeo = new THREE.CylinderGeometry(0.055, 0.055, sphereRadius * 0.88, 8);
+        shaftGeo.translate(0, (sphereRadius * 0.88) / 2, 0);
+        const shaft = inkify(new THREE.Mesh(shaftGeo, makeCelMaterial(colorHex)));
+        grp.add(shaft);
+
+        const tipMesh = isBoxTile
+          ? inkify(new THREE.Mesh(new THREE.BoxGeometry(0.50, 0.34, 0.50), makeCelMaterial(colorHex)))
+          : inkify(new THREE.Mesh(new THREE.OctahedronGeometry(0.38, 0), makeCelMaterial(colorHex)));
+        tipMesh.position.y = sphereRadius * 0.92;
+        grp.add(tipMesh);
+
+        // Tangent Force Arrow along the great circle (perpendicular to radial shaft)
+        const forceArrow = new THREE.Group();
+        const fShaft = inkify(new THREE.Mesh(
+          new THREE.CylinderGeometry(0.045, 0.045, 0.75, 8),
+          makeCelMaterial(arrowColorHex)
+        ));
+        fShaft.rotation.z = Math.PI / 2;
+        fShaft.position.x = 0.38;
+        const fHead = inkify(new THREE.Mesh(
+          new THREE.ConeGeometry(0.14, 0.30, 8),
+          makeCelMaterial(arrowColorHex)
+        ));
+        fHead.rotation.z = -Math.PI / 2;
+        fHead.position.x = 0.82;
+        forceArrow.add(fShaft, fHead);
+        forceArrow.position.y = sphereRadius * 0.96;
+        forceArrow.visible = false;
+        grp.add(forceArrow);
+
+        hypersphereGroup.add(grp);
+        return { grp, tipMesh, forceArrow };
+      }
+
+      // Anchor u_i at North Pole (theta = 0)
+      const probeAnchor = createGreatCircleProbe(0x0072B2, true, 0x0072B2);
+      // Co-registered Positive v_i+ (Right side of Great Circle, pulled North toward u_i)
+      const probePos = createGreatCircleProbe(0xE69F00, true, 0x0072B2);
+      // Candidate v_j (Left side of Great Circle, shunted when masked, pushed South when unmasked)
+      const probeFalseNeg = createGreatCircleProbe(0x9333ea, true, 0xdc2626);
+      // True Negative 1 v_k- (Left side of Great Circle, pushed South)
+      const probeTrueNeg1 = createGreatCircleProbe(0x2ca02c, false, 0xdc2626);
+      // True Negative 2 v_m- (Right side of Great Circle, pushed South)
+      const probeTrueNeg2 = createGreatCircleProbe(0x475569, false, 0xdc2626);
+
+      // Batch Drop Capsule Group
+      const dropBatchGroup = new THREE.Group();
+      const capColors = [0x0072B2, 0xE69F00, 0x9333ea, 0x2ca02c];
+      for (let i = 0; i < 4; i++) {
+        const cap = inkify(new THREE.Mesh(
+          new THREE.BoxGeometry(0.36, 0.22, 0.36),
+          makeCelMaterial(capColors[i])
+        ));
+        cap.position.set((i - 1.5) * 0.26, (i % 2) * 0.20, (i - 1.5) * 0.14);
+        dropBatchGroup.add(cap);
+      }
+      dropBatchGroup.visible = false;
+      machineRoot.add(dropBatchGroup);
+
+      // Shockwave Ring
+      const shockwaveMat = new THREE.MeshBasicMaterial({
+        color: 0xdc2626,
+        side: THREE.DoubleSide,
+        transparent: true,
+        opacity: 0.0
+      });
+      const shockwaveRing = new THREE.Mesh(new THREE.RingGeometry(0.35, 0.65, 24), shockwaveMat);
+      shockwaveRing.rotation.y = Math.PI / 2;
+      shockwaveRing.position.set(-1.5, 0.6, 0);
+      hypersphereGroup.add(shockwaveRing);
+
+      // =========================================================================
+      // 4. EXACT MATHEMATICAL ENGINE: BIT-VERIFIED IOU & RIEMANNIAN UPDATES
+      // =========================================================================
+      // Every preset's 10-bit vectors produce the EXACT rational IoU shown!
+      const SCENARIOS = {
+        A: {
+          name: 'v_j (Urban #2)',
+          bitsYi: [1, 1, 1, 1, 0, 0, 1, 0, 0, 0], // 5 bits
+          bitsYj: [1, 1, 1, 0, 1, 0, 1, 0, 0, 0], // 5 bits -> Intersect=4, Union=6 -> IoU = 4/6 = 0.6667
+          initPosSim: 0.8200,
+          initCandSim: 0.7600,
+          initNeg1Sim: -0.1500,
+          initNeg2Sim: 0.1000
+        },
+        B: {
+          name: 'v_j (Forest #2)',
+          bitsYi: [0, 0, 1, 1, 1, 1, 0, 0, 0, 0], // 4 bits
+          bitsYj: [0, 0, 0, 1, 1, 1, 1, 1, 0, 0], // 5 bits -> Intersect=3, Union=6 -> IoU = 3/6 = 0.5000
+          initPosSim: 0.8000,
+          initCandSim: 0.6800,
+          initNeg1Sim: -0.2000,
+          initNeg2Sim: 0.0500
+        },
+        C: {
+          name: 'v_j (Boundary)',
+          bitsYi: [1, 1, 1, 0, 0, 0, 0, 0, 0, 0], // 3 bits
+          bitsYj: [0, 1, 1, 1, 1, 0, 0, 0, 0, 0], // 4 bits -> Intersect=2, Union=5 -> IoU = 2/5 = 0.4000 (Strict > 0.40 is FALSE!)
+          initPosSim: 0.8200,
+          initCandSim: 0.6200,
+          initNeg1Sim: -0.1500,
+          initNeg2Sim: 0.1000
+        },
+        D: {
+          name: 'v_j (Pasture)',
+          bitsYi: [1, 1, 1, 0, 0, 0, 0, 0, 0, 0], // 3 bits
+          bitsYj: [0, 0, 1, 0, 0, 0, 1, 1, 1, 0], // 4 bits -> Intersect=1, Union=6 -> IoU = 1/6 = 0.1667
+          initPosSim: 0.8200,
+          initCandSim: 0.3800,
+          initNeg1Sim: -0.1500,
+          initNeg2Sim: 0.1000
+        }
+      };
+
+      let activeScenarioKey = 'A';
+      let gateArmed = true;
+      let cutawayActive = false;
+      let bitsYi = [...SCENARIOS.A.bitsYi];
+      let bitsYj = [...SCENARIOS.A.bitsYj];
+      let currentIoU = 4 / 6;
+      let intersectCount = 4;
+      let unionCount = 6;
+
+      let currentTau = 0.10;
+      let currentEta = 0.025; // Stated Riemannian angular step size in radians
+      const TAU_IOU = 0.40;
+      let stepCount = 0;
+
+      // Polar angles theta_m in (0, PI) on the 2-D Great-Circle Section of S^255
+      let thetaPos = Math.acos(0.8200);
+      let thetaCand = Math.acos(0.7600);
+      let thetaNeg1 = Math.acos(-0.1500);
+      let thetaNeg2 = Math.acos(0.1000);
+
+      // Last step's exact cosine changes Delta s_m
+      let lastDeltaSPos = 0.0;
+      let lastDeltaSCand = 0.0;
+      let lastDeltaSNeg1 = 0.0;
+      let lastDeltaSNeg2 = 0.0;
+
+      // Smooth visual interpolation targets
+      let curRotPos = -thetaPos;
+      let curRotCand = thetaCand;
+      let curRotNeg1 = thetaNeg1;
+      let curRotNeg2 = -thetaNeg2;
+
+      let targetBladeY = 0.0;
+      let shockwaveProgress = 0;
+      let sampleDropProgress = -1;
+      let pendingStepAfterDrop = false;
+      let autoStepRemaining = 0;
+      let centrifugeSpinBoost = 0;
+
+      // Compute exact Jaccard IoU directly from the 10-bit vectors bitsYi & bitsYj
+      function recomputeIoUFromBits() {
+        let inter = 0;
+        let uni = 0;
+        for (let b = 0; b < 10; b++) {
+          if (bitsYi[b] === 1 && bitsYj[b] === 1) inter++;
+          if (bitsYi[b] === 1 || bitsYj[b] === 1) uni++;
+        }
+        intersectCount = inter;
+        unionCount = uni;
+        currentIoU = uni > 0 ? inter / uni : 0.0;
+      }
+
+      // Render interactive 10-bit strips in the DOM
+      function renderBitStrips() {
+        const elYi = document.getElementById('strip-yi');
+        const elYj = document.getElementById('strip-yj');
+        elYi.innerHTML = '';
+        elYj.innerHTML = '';
+
+        for (let b = 0; b < 10; b++) {
+          const bothOn = bitsYi[b] === 1 && bitsYj[b] === 1;
+
+          const btnI = document.createElement('button');
+          btnI.className = `bit-cell ${bitsYi[b] ? 'bit-on-yi' : 'bit-off'} ${bothOn ? 'bit-both' : ''}`;
+          btnI.textContent = bitsYi[b];
+          btnI.title = `Toggle Y_i bit ${b} (Gold outline = shared intersection bit)`;
+          btnI.addEventListener('click', () => {
+            bitsYi[b] = bitsYi[b] ? 0 : 1;
+            recomputeIoUFromBits();
+            renderBitStrips();
+            refreshAllUI();
+          });
+          elYi.appendChild(btnI);
+
+          const btnJ = document.createElement('button');
+          btnJ.className = `bit-cell ${bitsYj[b] ? 'bit-on-yj' : 'bit-off'} ${bothOn ? 'bit-both' : ''}`;
+          btnJ.textContent = bitsYj[b];
+          btnJ.title = `Toggle Y_j bit ${b} (Gold outline = shared intersection bit)`;
+          btnJ.addEventListener('click', () => {
+            bitsYj[b] = bitsYj[b] ? 0 : 1;
+            recomputeIoUFromBits();
+            renderBitStrips();
+            refreshAllUI();
+          });
+          elYj.appendChild(btnJ);
+        }
+      }
+
+      // Exact 4-Way InfoNCE Softmax & Riemannian Great-Circle Gradient Solver
+      function computeInfoNCEState(isGateArmed, iouVal, tauVal, thPos, thCand, thNeg1, thNeg2) {
+        const sPos = Math.cos(thPos);
+        const sCand = Math.cos(thCand);
+        const sNeg1 = Math.cos(thNeg1);
+        const sNeg2 = Math.cos(thNeg2);
+
+        // Strict inequality IoU > 0.40 per §4.4.2 and Appendix C.3
+        const exceedsThreshold = iouVal > TAU_IOU + 1e-9;
+        const maskActive = isGateArmed && exceedsThreshold;
+
+        const lPos = sPos / tauVal;
+        const lCandRaw = sCand / tauVal;
+        const lNeg1 = sNeg1 / tauVal;
+        const lNeg2 = sNeg2 / tauVal;
+
+        const activeLogits = [lPos, maskActive ? -1e9 : lCandRaw, lNeg1, lNeg2];
+        const maxL = Math.max(...activeLogits);
+        const exps = activeLogits.map(l => (l <= -1e8 ? 0.0 : Math.exp(l - maxL)));
+        const sumExp = exps.reduce((a, b) => a + b, 0);
+
+        const pPos = exps[0] / sumExp;
+        const pCand = exps[1] / sumExp;
+        const pNeg1 = exps[2] / sumExp;
+        const pNeg2 = exps[3] / sumExp;
+
+        const loss = -Math.log(Math.max(1e-15, pPos));
+
+        // Exact partial derivative w.r.t. cosine similarity s_m = u_i^T v_m:
+        // ∂L_i / ∂s_i+ = (P_ii - 1) / tau   (negative -> pulls theta_i+ toward 0)
+        // ∂L_i / ∂s_m  = P_im / tau         (positive -> pushes theta_m toward PI)
+        const dLdsPos = (pPos - 1.0) / tauVal;
+        const dLdsCand = pCand / tauVal;
+        const dLdsNeg1 = pNeg1 / tauVal;
+        const dLdsNeg2 = pNeg2 / tauVal;
+
+        // Project onto tangent space of Great Circle at angle theta_m:
+        // Since s_m = cos(theta_m), ∂L_i / ∂theta_m = (∂L_i / ∂s_m) * (-sin(theta_m))
+        // Tangent gradient norm on S^255: ||∇_{v_m}^{S^255} L_i|| = |∂L_i / ∂s_m| * sin(theta_m)
+        const gradNormPos = Math.abs(dLdsPos) * Math.sin(thPos);
+        const gradNormCand = Math.abs(dLdsCand) * Math.sin(thCand);
+        const gradNormNeg1 = Math.abs(dLdsNeg1) * Math.sin(thNeg1);
+        const gradNormNeg2 = Math.abs(dLdsNeg2) * Math.sin(thNeg2);
+
+        // Exact geodesic angle update with stated step size eta:
+        // Δtheta_m = -eta * (∂L_i / ∂theta_m) = +eta * (∂L_i / ∂s_m) * sin(theta_m)
+        // Wait: for positive v_i+, dLdsPos < 0, so Δtheta_pos < 0 (angle decreases toward 0 = North Pole Pull!).
+        // For negatives v_m, dLds_m > 0, so Δtheta_m > 0 (angle increases toward PI = South Pole Push!).
+        // For masked v_j, dLdsCand === 0, so Δtheta_cand === 0.000000 (ZERO MOTION!).
+        const dThetaPos = currentEta * dLdsPos * Math.sin(thPos);
+        const dThetaCand = currentEta * dLdsCand * Math.sin(thCand);
+        const dThetaNeg1 = currentEta * dLdsNeg1 * Math.sin(thNeg1);
+        const dThetaNeg2 = currentEta * dLdsNeg2 * Math.sin(thNeg2);
+
+        return {
+          sPos, sCand, sNeg1, sNeg2,
+          exceedsThreshold, maskActive,
+          lPos, lCandRaw, lNeg1, lNeg2,
+          pPos, pCand, pNeg1, pNeg2,
+          loss,
+          dLdsPos, dLdsCand, dLdsNeg1, dLdsNeg2,
+          gradNormPos, gradNormCand, gradNormNeg1, gradNormNeg2,
+          dThetaPos, dThetaCand, dThetaNeg1, dThetaNeg2
+        };
+      }
+
+      // Execute 1 Exact Riemannian Gradient Step Driven SOLELY by Table Gradients
+      function applyGradientStep() {
+        const state = computeInfoNCEState(
+          gateArmed, currentIoU, currentTau,
+          thetaPos, thetaCand, thetaNeg1, thetaNeg2
+        );
+
+        const prevSPos = Math.cos(thetaPos);
+        const prevSCand = Math.cos(thetaCand);
+        const prevSNeg1 = Math.cos(thetaNeg1);
+        const prevSNeg2 = Math.cos(thetaNeg2);
+
+        // Strictly apply Δtheta_m = eta * (∂L_i / ∂s_m) * sin(theta_m) — NO floors, NO fake pulls!
+        const epsAngle = 0.015;
+        thetaPos = Math.max(epsAngle, Math.min(Math.PI - epsAngle, thetaPos + state.dThetaPos));
+        thetaCand = Math.max(epsAngle, Math.min(Math.PI - epsAngle, thetaCand + state.dThetaCand));
+        thetaNeg1 = Math.max(epsAngle, Math.min(Math.PI - epsAngle, thetaNeg1 + state.dThetaNeg1));
+        thetaNeg2 = Math.max(epsAngle, Math.min(Math.PI - epsAngle, thetaNeg2 + state.dThetaNeg2));
+
+        lastDeltaSPos = Math.cos(thetaPos) - prevSPos;
+        lastDeltaSCand = Math.cos(thetaCand) - prevSCand;
+        lastDeltaSNeg1 = Math.cos(thetaNeg1) - prevSNeg1;
+        lastDeltaSNeg2 = Math.cos(thetaNeg2) - prevSNeg2;
+
+        stepCount++;
+        shockwaveMat.color.setHex(state.maskActive ? 0x10b981 : 0xdc2626);
+        shockwaveProgress = 0.01;
+        centrifugeSpinBoost = 0.07;
+
+        refreshAllUI();
+      }
+
+      // Helper to orient and scale each 3D tangent force arrow strictly from ||∇_S L_i||
+      function updateForceArrow3D(probe, gradNorm, pointsCounterClockwise) {
+        if (gradNorm < 1e-4) {
+          probe.forceArrow.visible = false;
+          return;
+        }
+        probe.forceArrow.visible = true;
+        // Visual log-linear scale so both small (0.005) and large (2.5) forces are legible
+        const lenScale = Math.max(0.32, Math.min(1.85, 0.35 + Math.log10(1 + gradNorm * 8) * 0.72));
+        probe.forceArrow.scale.set(pointsCounterClockwise ? -lenScale : lenScale, Math.max(0.5, lenScale * 0.75), Math.max(0.5, lenScale * 0.75));
+      }
+
+      function refreshAllUI() {
+        const cur = computeInfoNCEState(gateArmed, currentIoU, currentTau, thetaPos, thetaCand, thetaNeg1, thetaNeg2);
+        const maskedCF = computeInfoNCEState(true, currentIoU, currentTau, thetaPos, thetaCand, thetaNeg1, thetaNeg2);
+        const stdCF = computeInfoNCEState(false, currentIoU, currentTau, thetaPos, thetaCand, thetaNeg1, thetaNeg2);
+
+        // 1. 3D Mechanical Gate, Coils & All 4 Tangent Force Arrows
+        targetBladeY = cur.maskActive ? 0.0 : 1.38;
+        fnCoilMat.color.setHex(cur.maskActive ? 0x64748b : 0xdc2626);
+        const southForce = cur.gradNormNeg1 + cur.gradNormNeg2 + (cur.maskActive ? 0 : cur.gradNormCand);
+        southCoilMat.color.setHex(southForce > 0.5 ? 0xdc2626 : 0xb91c1c);
+
+        // ProbePos is at rotation.z = -thetaPos (right side). Pull toward 0 means counter-clockwise (+z rot -> points left -x)
+        updateForceArrow3D(probePos, cur.gradNormPos, true);
+        // ProbeFalseNeg is at rotation.z = +thetaCand (left side). Push toward PI means counter-clockwise (+z rot -> points left -x)
+        updateForceArrow3D(probeFalseNeg, cur.gradNormCand, true);
+        // ProbeTrueNeg1 is at rotation.z = +thetaNeg1 (left side). Push toward PI means counter-clockwise (+z rot -> points left -x)
+        updateForceArrow3D(probeTrueNeg1, cur.gradNormNeg1, true);
+        // ProbeTrueNeg2 is at rotation.z = -thetaNeg2 (right side). Push toward PI means clockwise (-z rot -> points right +x)
+        updateForceArrow3D(probeTrueNeg2, cur.gradNormNeg2, false);
+
+        // 2. Left Drawer Readouts
+        const btnGate = document.getElementById('btn-gate-toggle');
+        const gateText = document.getElementById('gate-btn-text');
+        const gateDot = document.getElementById('gate-dot');
+        if (gateArmed) {
+          btnGate.className = 'ink-btn active-gate flex-1 py-1.5 px-2';
+          gateText.textContent = 'Jaccard Gate: ARMED';
+          gateDot.className = 'w-2 h-2 rounded-full bg-amber-300 border border-black';
+        } else {
+          btnGate.className = 'ink-btn bypassed-gate flex-1 py-1.5 px-2';
+          gateText.textContent = 'Gate: BYPASSED (Std)';
+          gateDot.className = 'w-2 h-2 rounded-full bg-white border border-black';
+        }
+
+        document.getElementById('set-counts').textContent = `|Y_i∩Y_j|=${intersectCount}, |Y_i∪Y_j|=${unionCount}`;
+        document.getElementById('scenario-tag').textContent = `${intersectCount}/${unionCount} = ${currentIoU.toFixed(3)}`;
+
+        const iouReadout = document.getElementById('iou-readout');
+        if (cur.exceedsThreshold) {
+          iouReadout.textContent = `IoU = ${currentIoU.toFixed(3)} > 0.40`;
+          iouReadout.className = 'font-bold px-1.5 py-0.2 rounded bg-[#762a83] text-white';
+        } else {
+          iouReadout.textContent = `IoU = ${currentIoU.toFixed(3)} ≤ 0.40`;
+          iouReadout.className = 'font-bold px-1.5 py-0.2 rounded bg-emerald-700 text-white';
+        }
+
+        document.getElementById('tau-readout').textContent = `τ = ${currentTau.toFixed(2)}`;
+        document.getElementById('eta-readout').textContent = `η = ${currentEta.toFixed(3)} rad`;
+        document.getElementById('step-counter').textContent = `Step: ${stepCount}`;
+
+        // 3. Narrative Audit Box
+        const narBox = document.getElementById('narrative-box');
+        const narTitle = document.getElementById('narrative-title');
+        const narBody = document.getElementById('narrative-body');
+
+        if (cur.maskActive) {
+          narBox.className = 'bg-emerald-50 border-2 border-[#1a1a1a] rounded-md p-2 mono text-[10px] leading-snug';
+          narTitle.className = 'font-bold text-emerald-900 uppercase';
+          narTitle.textContent = `✓ STEP ${stepCount}: JACCARD SHUNT ACTIVE (M_ij = 1)`;
+          narBody.textContent = `IoU = ${intersectCount}/${unionCount} (${currentIoU.toFixed(3)}) > 0.40: l_ij = -10⁹ ⇒ P_ij = 0 ⇒ ∂L/∂s_j = 0.0000. Candidate v_j has Δθ_j = 0.0000 rad (strictly stationary).`;
+        } else if (cur.exceedsThreshold && !gateArmed) {
+          narBox.className = 'bg-red-100 border-2 border-[#1a1a1a] rounded-md p-2 mono text-[10px] leading-snug';
+          narTitle.className = 'font-bold text-[#d32f2f] uppercase';
+          narTitle.textContent = `⚠️ STEP ${stepCount}: UNMASKED FALSE-NEGATIVE REPULSION`;
+          narBody.textContent = `Gate Bypassed on IoU=${currentIoU.toFixed(3)}! v_j steals P_ij=${(cur.pCand * 100).toFixed(1)}% of softmax mass, generating ‖∇_S L‖=${cur.gradNormCand.toFixed(3)} repulsion that drives cos θ_j down to ${cur.sCand.toFixed(4)}.`;
+        } else {
+          narBox.className = 'bg-sky-50 border-2 border-[#1a1a1a] rounded-md p-2 mono text-[10px] leading-snug';
+          narTitle.className = 'font-bold text-sky-900 uppercase';
+          narTitle.textContent = `ℹ️ STEP ${stepCount}: UNMASKED TRUE NEGATIVE (IoU ≤ 0.40)`;
+          narBody.textContent = `IoU = ${intersectCount}/${unionCount} (${currentIoU.toFixed(3)}) ≤ 0.40 (strict '>' inequality): M_ij = 0 even when Armed. Candidate v_j receives exact repulsion ‖∇_S L‖=${cur.gradNormCand.toFixed(4)}.`;
+        }
+
+        // 4. Right Telemetry Badge & 1x4 Table
+        const hudBadge = document.getElementById('hud-mode-badge');
+        if (cur.maskActive) {
+          hudBadge.textContent = 'MASKED (M_ij = 1)';
+          hudBadge.className = 'mono text-[9.5px] font-bold px-1.5 py-0.5 rounded bg-emerald-700 text-white border border-black';
+        } else if (cur.exceedsThreshold && !gateArmed) {
+          hudBadge.textContent = 'BYPASSED (FALSE NEG)';
+          hudBadge.className = 'mono text-[9.5px] font-bold px-1.5 py-0.5 rounded bg-[#d32f2f] text-white border border-black';
+        } else {
+          hudBadge.textContent = 'UNMASKED (M_ij = 0)';
+          hudBadge.className = 'mono text-[9.5px] font-bold px-1.5 py-0.5 rounded bg-sky-800 text-white border border-black';
+        }
+
+        const fmtSign = (v, d = 4) => (v >= 0 ? `+${v.toFixed(d)}` : v.toFixed(d));
+        const radToDeg = r => `${(r * 180 / Math.PI).toFixed(1)}°`;
+
+        // Row 1: Positive v_i+
+        document.getElementById('t-pos-ang').textContent = radToDeg(thetaPos);
+        document.getElementById('t-pos-sim').textContent = fmtSign(cur.sPos, 4);
+        document.getElementById('t-pos-mask').textContent = fmtSign(cur.lPos, 2);
+        document.getElementById('t-pos-prob').textContent = cur.pPos.toFixed(4);
+        document.getElementById('t-pos-dlds').textContent = fmtSign(cur.dLdsPos, 4);
+        document.getElementById('t-pos-grad').textContent = cur.gradNormPos.toFixed(4);
+        const predictedDsPos = Math.cos(thetaPos + cur.dThetaPos) - cur.sPos;
+        document.getElementById('t-pos-ds').textContent = fmtSign(stepCount > 0 ? lastDeltaSPos : predictedDsPos, 4);
+
+        // Row 2: Candidate v_j
+        const rowCand = document.getElementById('row-cand');
+        document.getElementById('t-cand-name').textContent = SCENARIOS[activeScenarioKey].name;
+        document.getElementById('t-cand-ang').textContent = radToDeg(thetaCand);
+        document.getElementById('t-cand-sim').textContent = fmtSign(cur.sCand, 4);
+
+        const tCandMask = document.getElementById('t-cand-mask');
+        const tCandProb = document.getElementById('t-cand-prob');
+        const tCandDlds = document.getElementById('t-cand-dlds');
+        const tCandGrad = document.getElementById('t-cand-grad');
+        const tCandDs = document.getElementById('t-cand-ds');
+        const predictedDsCand = Math.cos(thetaCand + cur.dThetaCand) - cur.sCand;
+
+        if (cur.maskActive) {
+          rowCand.className = 'bg-purple-100';
+          tCandMask.textContent = '-10⁹ (SHUNT)';
+          tCandMask.className = 'font-bold text-[#762a83]';
+          tCandProb.textContent = '0.0000';
+          tCandDlds.textContent = '0.0000';
+          tCandDlds.className = 'font-bold text-emerald-700';
+          tCandGrad.textContent = '0.0000';
+          tCandGrad.className = 'font-bold text-emerald-700';
+          tCandDs.textContent = '0.0000';
+          tCandDs.className = 'font-bold text-emerald-700';
+        } else {
+          rowCand.className = cur.exceedsThreshold ? 'bg-red-200' : 'bg-amber-50';
+          tCandMask.textContent = fmtSign(cur.lCandRaw, 2);
+          tCandMask.className = 'font-bold text-[#d32f2f]';
+          tCandProb.textContent = cur.pCand.toFixed(4);
+          tCandDlds.textContent = fmtSign(cur.dLdsCand, 4);
+          tCandDlds.className = 'font-bold text-[#d32f2f]';
+          tCandGrad.textContent = cur.gradNormCand.toFixed(4);
+          tCandGrad.className = 'font-bold text-[#d32f2f]';
+          tCandDs.textContent = fmtSign(stepCount > 0 ? lastDeltaSCand : predictedDsCand, 4);
+          tCandDs.className = 'font-bold text-[#d32f2f]';
+        }
+
+        // Row 3: True Negative 1 v_k-
+        const predictedDsNeg1 = Math.cos(thetaNeg1 + cur.dThetaNeg1) - cur.sNeg1;
+        document.getElementById('t-neg1-ang').textContent = radToDeg(thetaNeg1);
+        document.getElementById('t-neg1-sim').textContent = fmtSign(cur.sNeg1, 4);
+        document.getElementById('t-neg1-mask').textContent = fmtSign(cur.lNeg1, 2);
+        document.getElementById('t-neg1-prob').textContent = cur.pNeg1.toFixed(4);
+        document.getElementById('t-neg1-dlds').textContent = fmtSign(cur.dLdsNeg1, 4);
+        document.getElementById('t-neg1-grad').textContent = cur.gradNormNeg1.toFixed(4);
+        document.getElementById('t-neg1-ds').textContent = fmtSign(stepCount > 0 ? lastDeltaSNeg1 : predictedDsNeg1, 4);
+
+        // Row 4: True Negative 2 v_m-
+        const predictedDsNeg2 = Math.cos(thetaNeg2 + cur.dThetaNeg2) - cur.sNeg2;
+        document.getElementById('t-neg2-ang').textContent = radToDeg(thetaNeg2);
+        document.getElementById('t-neg2-sim').textContent = fmtSign(cur.sNeg2, 4);
+        document.getElementById('t-neg2-mask').textContent = fmtSign(cur.lNeg2, 2);
+        document.getElementById('t-neg2-prob').textContent = cur.pNeg2.toFixed(4);
+        document.getElementById('t-neg2-dlds').textContent = fmtSign(cur.dLdsNeg2, 4);
+        document.getElementById('t-neg2-grad').textContent = cur.gradNormNeg2.toFixed(4);
+        document.getElementById('t-neg2-ds').textContent = fmtSign(stepCount > 0 ? lastDeltaSNeg2 : predictedDsNeg2, 4);
+
+        // 5. Verifiable Counterfactual Loss & Repulsion Share Cards
+        document.getElementById('cf-masked-loss').textContent = `${maskedCF.loss.toFixed(4)} nats`;
+        document.getElementById('cf-std-loss').textContent = `${stdCF.loss.toFixed(4)} nats`;
+
+        const pijEl = document.getElementById('metric-pij');
+        if (cur.maskActive) {
+          pijEl.textContent = '0.00% (Shunted)';
+          pijEl.className = 'font-bold text-emerald-800';
+        } else {
+          pijEl.textContent = `${(cur.pCand * 100).toFixed(2)}% (Active Push)`;
+          pijEl.className = 'font-bold text-[#d32f2f]';
+        }
+
+        const initCandSim = SCENARIOS[activeScenarioKey].initCandSim;
+        const cumulDeltaCand = cur.sCand - initCandSim;
+        const intraSub = document.getElementById('metric-intraclass-sub');
+        intraSub.textContent = `${fmtSign(cumulDeltaCand, 4)} (${stepCount} step${stepCount === 1 ? '' : 's'})`;
+        intraSub.className = Math.abs(cumulDeltaCand) < 1e-6 ? 'font-bold text-emerald-800' : 'font-bold text-[#d32f2f]';
+
+        // 6. Update 3D Floating Probe Labels with Exact Cosine & Tangent Force
+        document.getElementById('lbl-pos').textContent = `v_i⁺ (θ_k): s=${fmtSign(cur.sPos, 3)} | ‖∇_S‖=${cur.gradNormPos.toFixed(3)}`;
+        document.getElementById('lbl-falseneg').textContent = `v_j (IoU=${currentIoU.toFixed(2)}): s=${fmtSign(cur.sCand, 3)} | ‖∇_S‖=${cur.gradNormCand.toFixed(3)}`;
+        document.getElementById('lbl-trueneg1').textContent = `v_k⁻ (θ_k): s=${fmtSign(cur.sNeg1, 3)} | ‖∇_S‖=${cur.gradNormNeg1.toFixed(3)}`;
+        document.getElementById('lbl-trueneg2').textContent = `v_m⁻ (θ_k): s=${fmtSign(cur.sNeg2, 3)} | ‖∇_S‖=${cur.gradNormNeg2.toFixed(3)}`;
+      }
+
+      function loadScenario(key) {
+        activeScenarioKey = key;
+        const sc = SCENARIOS[key];
+        bitsYi = [...sc.bitsYi];
+        bitsYj = [...sc.bitsYj];
+        recomputeIoUFromBits();
+
+        stepCount = 0;
+        lastDeltaSPos = 0.0;
+        lastDeltaSCand = 0.0;
+        lastDeltaSNeg1 = 0.0;
+        lastDeltaSNeg2 = 0.0;
+
+        thetaPos = Math.acos(sc.initPosSim);
+        thetaCand = Math.acos(sc.initCandSim);
+        thetaNeg1 = Math.acos(sc.initNeg1Sim);
+        thetaNeg2 = Math.acos(sc.initNeg2Sim);
+
+        document.querySelectorAll('.scenario-btn').forEach(btn => {
+          btn.classList.toggle('scenario-active', btn.getAttribute('data-batch') === key);
+        });
+
+        renderBitStrips();
+        refreshAllUI();
+      }
+
+      function triggerBatchDrop() {
+        if (sampleDropProgress >= 0) {
+          applyGradientStep();
+          return;
+        }
+        sampleDropProgress = 0.0;
+        pendingStepAfterDrop = true;
+        dropBatchGroup.visible = true;
+      }
+
+      // --- UI Event Listeners ---
+      document.getElementById('btn-gate-toggle').addEventListener('click', () => {
+        gateArmed = !gateArmed;
+        refreshAllUI();
+      });
+
+      document.getElementById('btn-cutaway').addEventListener('click', () => {
+        cutawayActive = !cutawayActive;
+        const btn = document.getElementById('btn-cutaway');
+        btn.classList.toggle('bg-[#1a1a1a]', cutawayActive);
+        btn.classList.toggle('text-white', cutawayActive);
+
+        casingMaterials.forEach(({ mat, baseOpacity }) => {
+          mat.opacity = cutawayActive ? Math.min(baseOpacity, 0.14) : baseOpacity;
+          mat.depthWrite = !cutawayActive;
+        });
+
+        for (let i = 1; i <= 5; i++) {
+          document.getElementById(`cut-${i}`).style.opacity = cutawayActive ? '1' : '0';
+        }
+      });
+
+      document.querySelectorAll('.scenario-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          autoStepRemaining = 0;
+          loadScenario(btn.getAttribute('data-batch'));
+        });
+      });
+
+      document.getElementById('slider-tau').addEventListener('input', (e) => {
+        currentTau = parseFloat(e.target.value);
+        refreshAllUI();
+      });
+
+      document.getElementById('slider-eta').addEventListener('input', (e) => {
+        currentEta = parseFloat(e.target.value);
+        refreshAllUI();
+      });
+
+      document.getElementById('btn-pulse').addEventListener('click', () => {
+        triggerBatchDrop();
+      });
+
+      document.getElementById('btn-autostep').addEventListener('click', () => {
+        if (autoStepRemaining > 0) {
+          autoStepRemaining = 0;
+          return;
+        }
+        autoStepRemaining = 5;
+        triggerBatchDrop();
+      });
+
+      document.getElementById('btn-reset').addEventListener('click', () => {
+        autoStepRemaining = 0;
+        loadScenario(activeScenarioKey);
+      });
+
+      // Collapsible Drawers & Full-Canvas Hide Toggle
+      const leftDrawer = document.getElementById('left-drawer');
+      const rightDrawer = document.getElementById('right-drawer');
+      const toggleLeftBtn = document.getElementById('toggle-left');
+      const toggleRightBtn = document.getElementById('toggle-right');
+
+      toggleLeftBtn.addEventListener('click', () => {
+        const collapsed = leftDrawer.classList.toggle('drawer-collapsed');
+        toggleLeftBtn.textContent = collapsed ? '[+]' : '[–]';
+      });
+
+      toggleRightBtn.addEventListener('click', () => {
+        const collapsed = rightDrawer.classList.toggle('drawer-collapsed');
+        toggleRightBtn.textContent = collapsed ? '[+]' : '[–]';
+      });
+
+      let panelsHidden = false;
+      document.getElementById('btn-hide-ui').addEventListener('click', (e) => {
+        panelsHidden = !panelsHidden;
+        leftDrawer.style.opacity = panelsHidden ? '0' : '1';
+        leftDrawer.style.pointerEvents = panelsHidden ? 'none' : 'auto';
+        rightDrawer.style.opacity = panelsHidden ? '0' : '1';
+        rightDrawer.style.pointerEvents = panelsHidden ? 'none' : 'auto';
+        e.currentTarget.textContent = panelsHidden ? '👁️ Show Panels' : '👁️ Hide Panels';
+      });
+
+      // Auto-collapse right drawer on narrow mobile screens so centrifuge is visible first
+      if (window.innerWidth < 768) {
+        rightDrawer.classList.add('drawer-collapsed');
+        toggleRightBtn.textContent = '[+]';
+      }
+
+      document.querySelectorAll('.swatch').forEach((sw) => {
+        sw.addEventListener('click', () => {
+          document.querySelectorAll('.swatch').forEach(s => s.classList.remove('selected'));
+          sw.classList.add('selected');
+          document.body.style.backgroundColor = sw.getAttribute('data-paper');
+          const casingHex = sw.getAttribute('data-casing');
+          primaryCasingMaterials.forEach(mat => mat.color.set(casingHex));
+        });
+      });
+
+      // =========================================================================
+      // 5. ORBIT DRAG & ZOOM CONTROLS
+      // =========================================================================
+      let isDragging = false;
+      let prevPointer = { x: 0, y: 0 };
+
+      container.addEventListener('pointerdown', (e) => {
+        isDragging = true;
+        prevPointer = { x: e.clientX, y: e.clientY };
+      });
+      window.addEventListener('pointerup', () => { isDragging = false; });
+      window.addEventListener('pointermove', (e) => {
+        if (!isDragging) return;
+        const dx = e.clientX - prevPointer.x;
+        const dy = e.clientY - prevPointer.y;
+        camAzimuth -= dx * 0.0085;
+        camElevation = Math.max(0.18, Math.min(1.35, camElevation + dy * 0.007));
+        updateCameraTransform();
+        prevPointer = { x: e.clientX, y: e.clientY };
+      });
+
+      container.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        viewSize = Math.max(5.2, Math.min(13.5, viewSize + e.deltaY * 0.004));
+        camera.left = -viewSize * aspect;
+        camera.right = viewSize * aspect;
+        camera.top = viewSize;
+        camera.bottom = -viewSize;
+        camera.updateProjectionMatrix();
+      }, { passive: false });
+
+      window.addEventListener('resize', () => {
+        aspect = window.innerWidth / window.innerHeight;
+        camera.left = -viewSize * aspect;
+        camera.right = viewSize * aspect;
+        camera.top = viewSize;
+        camera.bottom = -viewSize;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      });
+
+      // =========================================================================
+      // 6. 3D-TO-2D SCREEN PROJECTION & ANIMATION LOOP
+      // =========================================================================
+      const tempVec = new THREE.Vector3();
+      function projectToScreen(worldVec, elementId, yOffset = 0) {
+        const el = document.getElementById(elementId);
+        if (!el) return;
+        tempVec.copy(worldVec);
+        tempVec.y += yOffset;
+        tempVec.project(camera);
+        const x = (tempVec.x * 0.5 + 0.5) * window.innerWidth;
+        const y = (-(tempVec.y * 0.5) + 0.5) * window.innerHeight;
+        el.style.left = `${x}px`;
+        el.style.top = `${y}px`;
+      }
+
+      const worldPosAnchor = new THREE.Vector3();
+      const worldPosPos = new THREE.Vector3();
+      const worldPosFalseNeg = new THREE.Vector3();
+      const worldPosTrueNeg1 = new THREE.Vector3();
+      const worldPosTrueNeg2 = new THREE.Vector3();
+
+      const cutAnchors = [
+        new THREE.Vector3(-2.35, 4.3, 0),   // 1. 10-bit Scanner
+        new THREE.Vector3(-1.35, 3.3, 0),   // 2. Guillotine Gate
+        new THREE.Vector3(2.2, 2.5, 0),     // 3. 2-D Great Circle Section
+        new THREE.Vector3(3.6, -1.4, 2.2),  // 4. Temp Valve & Gauge
+        new THREE.Vector3(0, -2.5, 1.5)     // 5. Repulsion Coils
+      ];
+
+      probeAnchor.grp.rotation.set(0, 0, 0);
+      loadScenario('A');
+
+      function animate() {
+        requestAnimationFrame(animate);
+
+        // 1. Centrifuge Rotor & Temperature Valve / Gauge Needle
+        centrifugeSpinBoost *= 0.94;
+        rotorRingGroup.rotation.y += 0.006 + centrifugeSpinBoost;
+        valveWheel.rotation.z = -(currentTau - 0.05) * 12;
+        gaugeNeedle.rotation.z = (0.22 - currentTau) * 6.5;
+
+        // 2. Smoothly Animate Guillotine Gate
+        guillotineBlade.position.y += (targetBladeY - guillotineBlade.position.y) * 0.22;
+
+        // 3. Interpolate Great-Circle Angles in XY Plane (z-axis rotation)
+        const targetRotPos = -thetaPos;
+        const targetRotCand = thetaCand;
+        const targetRotNeg1 = thetaNeg1;
+        const targetRotNeg2 = -thetaNeg2;
+
+        curRotPos += (targetRotPos - curRotPos) * 0.16;
+        curRotCand += (targetRotCand - curRotCand) * 0.16;
+        curRotNeg1 += (targetRotNeg1 - curRotNeg1) * 0.16;
+        curRotNeg2 += (targetRotNeg2 - curRotNeg2) * 0.16;
+
+        probePos.grp.rotation.z = curRotPos;
+        probeFalseNeg.grp.rotation.z = curRotCand;
+        probeTrueNeg1.grp.rotation.z = curRotNeg1;
+        probeTrueNeg2.grp.rotation.z = curRotNeg2;
+
+        // 4. Animate Batch Capsule Ingestion -> Scanner -> Exact Gradient Step
+        if (sampleDropProgress >= 0) {
+          sampleDropProgress += 0.042;
+          if (sampleDropProgress < 0.5) {
+            const t = sampleDropProgress / 0.5;
+            dropBatchGroup.position.set(-2.35, 4.8 - t * 2.0, 0);
+            dropBatchGroup.rotation.y += 0.16;
+            scannerBeam.scale.y = 1 + Math.sin(t * Math.PI * 4) * 1.4;
+          } else if (sampleDropProgress < 1.0) {
+            const t = (sampleDropProgress - 0.5) / 0.5;
+            dropBatchGroup.position.set(-2.35 + t * 1.5, 2.8 - t * 1.6, 0);
+            dropBatchGroup.rotation.z -= 0.12;
+          } else {
+            dropBatchGroup.visible = false;
+            sampleDropProgress = -1;
+            scannerBeam.scale.y = 1;
+            if (pendingStepAfterDrop) {
+              pendingStepAfterDrop = false;
+              applyGradientStep();
+            }
+            if (autoStepRemaining > 1) {
+              autoStepRemaining--;
+              setTimeout(() => triggerBatchDrop(), 140);
+            } else {
+              autoStepRemaining = 0;
+            }
+          }
+        }
+
+        // 5. Shockwave Ring
+        if (shockwaveProgress > 0) {
+          shockwaveProgress += 0.04;
+          shockwaveRing.scale.setScalar(1 + shockwaveProgress * 3.2);
+          shockwaveRing.material.opacity = Math.max(0, 0.85 * (1 - shockwaveProgress));
+          if (shockwaveProgress >= 1.0) {
+            shockwaveProgress = 0;
+            shockwaveRing.material.opacity = 0;
+          }
+        }
+
+        // 6. Project 3D Callouts to 2D Screen
+        probeAnchor.tipMesh.getWorldPosition(worldPosAnchor);
+        probePos.tipMesh.getWorldPosition(worldPosPos);
+        probeFalseNeg.tipMesh.getWorldPosition(worldPosFalseNeg);
+        probeTrueNeg1.tipMesh.getWorldPosition(worldPosTrueNeg1);
+        probeTrueNeg2.tipMesh.getWorldPosition(worldPosTrueNeg2);
+
+        projectToScreen(worldPosAnchor, 'lbl-anchor', 0.42);
+        projectToScreen(worldPosPos, 'lbl-pos', 0.36);
+        projectToScreen(worldPosFalseNeg, 'lbl-falseneg', 0.36);
+        projectToScreen(worldPosTrueNeg1, 'lbl-trueneg1', -0.38);
+        projectToScreen(worldPosTrueNeg2, 'lbl-trueneg2', -0.38);
+
+        if (cutawayActive) {
+          for (let i = 0; i < 5; i++) {
+            projectToScreen(cutAnchors[i], `cut-${i + 1}`, 0);
+          }
+        }
+
+        renderer.render(scene, camera);
+      }
+
+      animate();
+    };
+  </script>
+</body>
+</html>
