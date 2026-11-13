@@ -13,7 +13,7 @@ This is an attempt on visualizing the working physics and some parts of the arch
 | Demo | Description | Preview | Live Link |
 | :--- | :--- | :--- | :--- |
 | [**Satellite Working**](./demos/satellite_working.md) | simulated workings of sentinel-1 and sentinel-2 | [![Particle Demo](images/satellite_physics.png)](https://github.io) | [Launch Demo →](https://p-retrover.github.io/cross-modal-satellite-image-retrieval/demos/sentinel_1_vs_sentinel_2_isometric_technical_figure) |
-| **Masked InfoNCE Hypersphere Centrifuge** (incomplete) | Interactive 3D WebGL simulation of false-negative Jaccard gating ($\tau_{\text{IoU}} = 0.40$), Riemannian tangent-space gradients, and multi-label CORINE bitstream masking. | [![Particle Demo](images/Jaccard-False-Negative-Gate.png)](https://github.io) | [Launch Demo →](https://p-retrover.github.io/cross-modal-satellite-image-retrieval/demos/masked_infonce_centrifuge_jaccard_gate) |
+| [**Masked InfoNCE Hypersphere Centrifuge**](./demos/centrifuge_demo.md) (incomplete) | Interactive 3D WebGL simulation of false-negative Jaccard gating ($\tau_{\text{IoU}} = 0.40$), Riemannian tangent-space gradients, and multi-label CORINE bitstream masking. | [![Particle Demo](images/Jaccard-False-Negative-Gate.png)](https://github.io) | [Launch Demo →](https://p-retrover.github.io/cross-modal-satellite-image-retrieval/demos/masked_infonce_centrifuge_jaccard_gate) |
 
 ## Project Overview
 
