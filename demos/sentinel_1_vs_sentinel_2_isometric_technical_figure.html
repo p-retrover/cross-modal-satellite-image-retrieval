@@ -3,50 +3,56 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Sentinel-1 vs Sentinel-2 Physics Explorer</title>
+  <title>Sentinel-1 vs Sentinel-2 | Realistic Earth Observation Explorer</title>
+  <meta name="description" content="Interactive 3D Sentinel-1 SAR and Sentinel-2 optical remote-sensing visualization." />
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
   
   <style>
     :root {
-      --paper: #f4eadd;
-      --ink: #1c1917;
-      --s1-cyan: #06b6d4;
-      --s2-yellow: #eab308;
+      --paper: #080f18;
+      --ink: #e8edf2;
+      --s1-cyan: #22d3ee;
+      --s2-yellow: #fbbf24;
+      --panel: rgba(12, 20, 30, .94);
+      --line: rgba(159, 178, 195, .24);
     }
 
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     
     body {
-      margin: 0; overflow: hidden; background: var(--paper); color: var(--ink);
+      margin: 0; overflow: hidden; background: radial-gradient(ellipse at 50% 30%, #0d2137 0%, #071322 55%, #03070e 100%); color: var(--ink);
       font-family: 'Space Grotesk', sans-serif;
     }
 
     /* Sketchy UI Panels */
     .ink-panel {
-      background: #fffdfa;
-      border: 3px solid var(--ink);
-      box-shadow: 6px 6px 0px rgba(59, 130, 246, 0.15), 6px 6px 0px var(--ink);
-      border-radius: 8px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      box-shadow: 0 18px 48px rgba(0, 0, 0, .34), inset 0 1px 0 rgba(255,255,255,.08);
+      border-radius: 10px;
+      color: #e8f1fb;
+      backdrop-filter: blur(14px);
     }
 
     .ink-btn {
-      background: #fffdfa; border: 2px solid var(--ink); box-shadow: 3px 3px 0px var(--ink);
-      border-radius: 6px; font-weight: 700; cursor: pointer; transition: all 0.1s;
+      background: linear-gradient(135deg, rgba(18, 92, 130, .98), rgba(30, 64, 110, .98)); border: 1px solid rgba(148,190,224,.45); box-shadow: 0 4px 12px rgba(0,0,0,.22);
+      color: #eaf6ff; border-radius: 9px; font-weight: 700; cursor: pointer; transition: all 0.16s ease;
       display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
     }
-    .ink-btn:active { transform: translate(3px, 3px); box-shadow: 0px 0px 0px var(--ink); }
-    .ink-btn.action-btn { background: #fee2e2; border-color: #991b1b; color: #991b1b; }
+    .ink-btn:hover { background: linear-gradient(135deg, #0e7490, #3159a8); border-color: #67d7ef; transform: translateY(-1px); }
+    .ink-btn:active { transform: translateY(1px); box-shadow: 0 1px 4px rgba(0,0,0,.2); }
+    .ink-btn.action-btn { background: linear-gradient(135deg, #f97316, #dc2626); border-color: #fb923c; color: #fff; }
 
     /* Custom Checkboxes */
     .ink-check-wrap { display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 0.85rem; font-weight: 700; }
     .ink-check {
       appearance: none; width: 20px; height: 20px; border: 2px solid var(--ink); border-radius: 4px;
-      background: #fffdfa; box-shadow: 2px 2px 0px var(--ink); cursor: pointer; position: relative;
+      background: #102b46; border-color: #79a9c9; box-shadow: none; cursor: pointer; position: relative;
     }
     .ink-check:checked::after {
-      content: '✔'; position: absolute; top: -2px; left: 2px; font-size: 14px; font-weight: bold; color: var(--ink);
+      content: '✔'; position: absolute; top: -2px; left: 2px; font-size: 14px; font-weight: bold; color: #22d3ee;
     }
 
     /* HUD Typewriter text */
@@ -55,26 +61,78 @@
     /* Floating Labels */
     .dielectric-label {
       position: absolute; transform: translate(-50%, -50%);
-      background: rgba(255, 255, 255, 0.9); border: 2px dashed var(--ink);
+      background: rgba(5, 24, 42, .92); color: #e7f7ff; border: 1px solid #54c7e8;
+      box-shadow: 0 4px 14px rgba(0,0,0,.35);
       padding: 4px 8px; border-radius: 4px; font-family: 'IBM Plex Mono', monospace;
       font-weight: bold; font-size: 0.75rem; pointer-events: none; opacity: 0;
       transition: opacity 0.3s; z-index: 10;
     }
     .dielectric-label.visible { opacity: 1; }
 
-    #canvas-container { position: fixed; inset: 0; cursor: grab; }
+    #canvas-container { position: fixed; inset: 0; cursor: grab; background: radial-gradient(ellipse at 50% 42%, rgba(31,75,91,.18), transparent 58%); }
+    #canvas-container::after { content:''; position:absolute; inset:0; pointer-events:none; opacity:.12; background-image: linear-gradient(rgba(105,170,190,.08) 1px, transparent 1px), linear-gradient(90deg, rgba(105,170,190,.08) 1px, transparent 1px); background-size: 56px 56px; mask-image: linear-gradient(to bottom, transparent, black 25%, black 75%, transparent); }
     #canvas-container:active { cursor: grabbing; }
+    .control-select, .speed-control { width: 100%; border: 1px solid rgba(148,190,224,.48); border-radius: 8px; background: #102943; padding: 7px 9px; font: 600 0.82rem 'IBM Plex Mono', monospace; color: #e8f1fb; }
+    .control-select option { background: #102943; color: #e8f1fb; }
+    .control-select:focus-visible, .speed-control:focus-visible, button:focus-visible, input:focus-visible { outline: 3px solid #0e7490; outline-offset: 3px; }
+    .sensor-note { border-left: 3px solid var(--s1-cyan); padding: 5px 0 5px 9px; color: #c5d9e9; font-size: .75rem; line-height: 1.45; }
+    .sensor-note.optical { color: #e8d7a8; border-color: var(--s2-yellow); }
+    aside.ink-panel h2 { color: #f5fbff; letter-spacing: .02em; }
+    aside.ink-panel { background: rgba(7, 17, 27, .96); border-color: rgba(94, 164, 193, .34); }
+    footer.ink-panel { max-width: 700px; padding: 7px 9px; gap: 6px; background: rgba(7, 17, 27, .96); }
+    footer.ink-panel .ink-btn { padding: 4px 8px; min-height: 28px; font-size: .70rem; }
+    footer.ink-panel #btn-fire { padding: 4px 9px; font-size: .72rem; }
+    footer.ink-panel #hud-text { font-size: .68rem; }
+    footer.ink-panel > .flex-1 { background: rgba(3, 9, 15, .96); border-color: rgba(130, 157, 179, .28); padding: 6px 8px; min-height: 30px; }
 
+    .scene-legend { min-width: 172px; border-radius: 8px; background: rgba(7,17,27,.88); border-color: rgba(94,164,193,.30); box-shadow: 0 8px 24px rgba(0,0,0,.22); }
+    .legend-dot { display:inline-block; width:8px; height:8px; border-radius:50%; box-shadow:0 0 9px currentColor; }
+    .view-reset { cursor:pointer; transition: border-color .18s ease, color .18s ease, background .18s ease; }
+    .view-reset:focus-visible { outline:3px solid #22d3ee; outline-offset:3px; }
+    @media (max-width: 640px) {
+      .scene-toolbar { top: auto; bottom: 112px; right: 10px; left: 10px; justify-content: flex-end; }
+      .scene-toolbar > span { display:none; }
+      .view-reset { padding: 6px 9px; }
+      .scene-legend { top: 56px; right: 10px; min-width: 148px; font-size: 9px; padding: 7px 9px; }
+    }
+
+    @media (max-width: 640px) {
+      body { overflow: auto; }
+      #canvas-container { position: fixed; inset: 0; }
+      aside.ink-panel { top: 8px; left: 8px; right: 8px; max-width: none; max-height: 43vh; overflow-y: auto; padding: 10px; gap: 9px; }
+      aside.ink-panel h2 { font-size: .95rem; }
+      aside.ink-panel .sensor-note { display: none; }
+      footer.ink-panel { bottom: 8px; width: calc(100vw - 16px); padding: 8px; gap: 6px; flex-direction: row; flex-wrap: wrap; }
+      footer.ink-panel #btn-fire, footer.ink-panel #btn-pause { width: auto; padding: 3px 7px; font-size: .66rem; min-height: 26px; }
+      footer.ink-panel .hud-row { width: calc(50% - 4px); }
+      footer.ink-panel .hud-row:nth-child(2) { flex: 1 1 48%; }
+      footer.ink-panel > .flex-1 { flex: 1 1 100%; }
+      footer.ink-panel #hud-text { font-size: .67rem; }
+      .dielectric-label { font-size: .62rem; padding: 3px 5px; }
+    }
+
+    @media (min-width: 641px) {
+      footer.ink-panel #btn-pause, footer.ink-panel #btn-fire { flex: 0 0 auto; width: auto; padding: 3px 7px; min-height: 26px; font-size: .68rem; }
+      footer.ink-panel .hud-row:first-child { max-width: 132px; }
+      footer.ink-panel .hud-row:nth-child(2) { max-width: 148px; }
+    }
     .fade-enter { animation: fadeIn 0.2s ease-out; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
   </style>
 </head>
 <body>
-  <div id="canvas-container"></div>
+  <div id="canvas-container" aria-label="Interactive scientific 3D model of Sentinel satellite observations" title="Drag to rotate the model; scroll to zoom"></div>
+  <div class="scene-toolbar fixed top-4 right-4 z-10 flex items-center justify-end mono-text text-[10px] tracking-wide text-slate-300">
+    <button id="btn-reset-view" class="view-reset rounded border border-slate-500/60 bg-slate-950/85 px-3 py-2 font-bold text-slate-100 hover:border-cyan-300 hover:text-cyan-200" type="button" title="Restore the default isometric camera">↺ Reset view</button>
+  </div>
+  <div class="flex items-center gap-2"><span class="legend-dot bg-cyan-400"></span> SAR transmit / echo</div>
+    <div class="mt-1 flex items-center gap-2"><span class="legend-dot bg-amber-400"></span> Optical sunlight path</div>
+    <div class="mt-1 text-slate-400">Drag to orbit · Scroll to zoom</div>
+  </div>
   
   <div id="labels-container">
     <div id="lbl-water" class="dielectric-label">εr ≈ 80</div>
-    <div id="lbl-soil" class="dielectric-label">εr ≈ 3-5</div>
+    <div id="lbl-soil" class="dielectric-label" style="border-color: #f59e0b; color: #fef3c7;">εr ≈ 3-5</div>
   </div>
 
   <!-- Top Controls Panel -->
@@ -107,11 +165,29 @@
         </label>
       </div>
     </div>
+    <div class="h-px w-full bg-[#1c1917]/20 border-b border-dashed border-[#1c1917]"></div>
+    <div>
+      <h2 class="font-bold text-base leading-tight mb-2">Sensor guide</h2>
+      <p class="sensor-note">Sentinel-1 SAR: an active C-band radar transmits microwave pulses and records the backscattered echo. It operates day or night and through most cloud.</p>
+      <p class="sensor-note optical mt-2">Sentinel-2: a passive multispectral imager measures reflected sunlight in visible, red-edge and near-infrared bands. Clouds and darkness limit acquisition.</p>
+    </div>
   </aside>
 
   <!-- Bottom HUD & Action Panel -->
-  <footer class="fixed bottom-4 left-1/2 -translate-x-1/2 z-20 w-[calc(100vw-2rem)] max-w-2xl ink-panel p-4 flex flex-col md:flex-row items-center gap-4">
-    <button id="btn-fire" class="ink-btn action-btn py-2 px-6 whitespace-nowrap text-lg w-full md:w-auto">
+  <footer class="fixed bottom-4 left-1/2 -translate-x-1/2 z-20 w-[calc(100vw-2rem)] max-w-3xl ink-panel p-4 flex flex-col md:flex-row items-center gap-3">
+    <div class="hud-row flex items-center gap-2 w-full md:w-auto">
+      <label class="sr-only" for="target-select">Choose a surface to scan</label>
+      <select id="target-select" class="control-select" aria-label="Choose a surface to scan">
+        <option value="0">Scan: Water</option><option value="1">Scan: Forest</option><option value="2">Scan: Urban</option>
+      </select>
+    </div>
+    <div class="hud-row flex items-center gap-2 w-full md:w-auto">
+      <label for="speed-range" class="text-xs font-bold whitespace-nowrap">Speed</label>
+      <input id="speed-range" class="speed-control" type="range" min="0.5" max="2.5" step="0.25" value="1" aria-label="Animation speed">
+      <span id="speed-value" class="mono-text whitespace-nowrap">1×</span>
+    </div>
+    <button id="btn-pause" class="ink-btn py-2 px-3 whitespace-nowrap w-full md:w-auto" type="button" aria-pressed="false">Ⅱ Pause</button>
+    <button id="btn-fire" class="ink-btn action-btn py-1 px-2 whitespace-nowrap text-xs w-full md:w-auto">
       ⚡ Fire Pulse
     </button>
     <div class="flex-1 bg-[#1c1917] text-[#f4eadd] p-3 rounded border border-gray-600 w-full min-h-[4.5rem] flex items-center">
@@ -120,183 +196,1039 @@
   </footer>
 
   <script>
+    // Report startup errors visibly instead of leaving a blank canvas.
+    window.addEventListener('error', function (event) {
+      const message = event && (event.message || (event.error && event.error.message));
+      if (!message) return;
+      let panel = document.getElementById('runtime-error-panel');
+      if (!panel) {
+        panel = document.createElement('div');
+        panel.id = 'runtime-error-panel';
+        panel.style.cssText = 'position:fixed;z-index:99999;left:50%;top:50%;transform:translate(-50%,-50%);width:min(560px,calc(100vw - 32px));padding:20px 22px;border:1px solid #f59e0b;border-radius:12px;background:#081522;color:#e5edf5;font:14px/1.55 system-ui,sans-serif;box-shadow:0 18px 60px #0009';
+        document.body.appendChild(panel);
+      }
+      panel.innerHTML = '<strong style="display:block;color:#fbbf24;font-size:17px;margin-bottom:8px">3D visualization could not start</strong><div style="margin-bottom:10px">A required component reported this error:</div><code style="display:block;white-space:pre-wrap;overflow-wrap:anywhere;color:#bae6fd;background:#020a12;padding:9px;border-radius:6px"></code><div style="margin-top:12px;color:#b8c7d8">Check your internet connection. Three.js is loaded from a CDN. Refresh after reconnecting. If this message remains, send a screenshot of it.</div>';
+      panel.querySelector('code').textContent = String(message);
+    });
+    window.addEventListener('unhandledrejection', function (event) {
+      const reason = event && event.reason;
+      const message = reason && (reason.message || String(reason));
+      if (message) window.dispatchEvent(new ErrorEvent('error', { message: message }));
+    });
+  </script>
+  <script>
+    if (typeof THREE === 'undefined') {
+      const panel = document.createElement('div');
+      panel.id = 'runtime-error-panel';
+      panel.style.cssText = 'position:fixed;z-index:99999;left:50%;top:50%;transform:translate(-50%,-50%);width:min(560px,calc(100vw - 32px));padding:20px 22px;border:1px solid #f59e0b;border-radius:12px;background:#081522;color:#e5edf5;font:14px/1.55 system-ui,sans-serif;box-shadow:0 18px 60px #0009';
+      panel.innerHTML = '<strong style="display:block;color:#fbbf24;font-size:17px;margin-bottom:8px">Three.js did not load</strong><div>The 3D library is required to draw the satellite scene. Check your internet connection and reload this file. If you are opening it offline, the CDN library cannot be reached.</div>';
+      document.body.appendChild(panel);
+      throw new Error('Three.js is unavailable. Check internet access to the CDN.');
+    }
     // --- 1. THREE.JS SCENE SETUP ---
     const container = document.getElementById('canvas-container');
     const scene = new THREE.Scene();
+    const dayBgColor = new THREE.Color(0x06101c);
+    const nightBgColor = new THREE.Color(0x02050a);
+    scene.background = dayBgColor.clone();
+    scene.fog = new THREE.FogExp2(0x06101c, 0.011);
 
-    // Orthographic Isometric Camera
+    // Orthographic Isometric Camera: Framed at d = 9.4 & looking at (0.3, 1.35, 0)
+    // so both the terrain diorama AND the orbiting Sentinel satellites fit cleanly inside the viewport.
     const aspect = window.innerWidth / window.innerHeight;
-    const d = 8;
-    const camera = new THREE.OrthographicCamera(-d * aspect, d * aspect, d, -d, 1, 100);
-    camera.position.set(20, 20, 20);
-    camera.lookAt(0, 0, 0);
+    const defaultView = { frustum: 9.4, position: new THREE.Vector3(22, 20.5, 22) };
+    let d = defaultView.frustum;
+    const cameraTarget = new THREE.Vector3(0.3, 1.35, 0);
+    const camera = new THREE.OrthographicCamera(-d * aspect, d * aspect, d, -d, 1, 120);
+    camera.position.copy(defaultView.position);
+    camera.lookAt(cameraTarget);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.outputEncoding = THREE.sRGBEncoding;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.02;
+    renderer.physicallyCorrectLights = true;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     container.appendChild(renderer.domElement);
 
-    // Flat Toon Shading Setup
-    const colors = new Uint8Array([100, 100, 100, 255, 200, 200, 200, 255, 255, 255, 255, 255]);
-    const gradientMap = new THREE.DataTexture(colors, 3, 1, THREE.RGBAFormat);
-    gradientMap.minFilter = THREE.NearestFilter;
-    gradientMap.magFilter = THREE.NearestFilter;
-    gradientMap.needsUpdate = true;
-
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+    // --- STUDIO LIGHTING & HIGH-CONTRAST SHADOWS ---
+    const ambientLight = new THREE.HemisphereLight(0x9bc9e5, 0x17251c, 0.52);
     scene.add(ambientLight);
-    const dirLight = new THREE.DirectionalLight(0xffffff, 0.6);
-    dirLight.position.set(10, 20, 10);
+
+    const dirLight = new THREE.DirectionalLight(0xffe3b0, 2.05);
+    dirLight.position.set(11, 24, 13);
+    dirLight.castShadow = true;
+    dirLight.shadow.mapSize.set(2048, 2048);
+    dirLight.shadow.bias = -0.0005;
+    dirLight.shadow.normalBias = 0.018;
+    dirLight.shadow.camera.left = -18;
+    dirLight.shadow.camera.right = 18;
+    dirLight.shadow.camera.top = 18;
+    dirLight.shadow.camera.bottom = -18;
+    dirLight.shadow.camera.near = 2;
+    dirLight.shadow.camera.far = 55;
     scene.add(dirLight);
 
-    // Storage for cutaway toggles
-    const outerMaterials = [];
+    const fillLight = new THREE.DirectionalLight(0x5ba9d1, 0.42);
+    fillLight.position.set(-14, 11, -12);
+    scene.add(fillLight);
+
+    const bounceLight = new THREE.DirectionalLight(0xfde68a, 0.18);
+    bounceLight.position.set(8, 5, -14);
+    scene.add(bounceLight);
+
+    // Storage for smooth cutaway (See-Through Dielectric) transitions
+    const cutawayMaterials = [];
     const innerMeshes = [];
     const dielectricTargets = { water: new THREE.Vector3(), soil: new THREE.Vector3() };
 
-    function createToonMaterial(color, opacity = 1) {
-      const mat = new THREE.MeshToonMaterial({
-        color: color, gradientMap: gradientMap,
-        transparent: true, opacity: opacity, side: THREE.DoubleSide
-      });
-      outerMaterials.push(mat);
+    function registerCutawayMat(mat, baseOpacity = 1.0, cutawayOpacity = 0.22) {
+      mat.transparent = true;
+      mat.userData.baseOpacity = baseOpacity;
+      mat.userData.cutawayOpacity = cutawayOpacity;
+      cutawayMaterials.push(mat);
       return mat;
     }
 
-    function addInkEdges(mesh, threshold = 15) {
-      const edges = new THREE.EdgesGeometry(mesh.geometry, threshold);
-      const line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ color: 0x1c1917, linewidth: 2 }));
-      mesh.add(line);
-      return mesh;
+    // Hyper-detailed procedural surface & cross-section maps for photorealistic contrast
+    function makeSurfaceMap(base, fleck, mode = 'noise') {
+      const canvas = document.createElement('canvas');
+      canvas.width = 1024; canvas.height = 1024;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = base;
+      ctx.fillRect(0, 0, 1024, 1024);
+
+      if (mode === 'water') {
+        // Deep abyssal blue-teal gradient transitioning to coastal turquoise near right bank (x -> 1024)
+        const grad = ctx.createLinearGradient(0, 0, 1024, 0);
+        grad.addColorStop(0.0, '#021f33');
+        grad.addColorStop(0.65, '#032b43');
+        grad.addColorStop(0.88, '#085975');
+        grad.addColorStop(1.0, '#0e7490');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, 1024, 1024);
+
+        for (let i = 0; i < 16000; i++) {
+          const x = Math.random() * 1024, y = Math.random() * 1024;
+          const r = Math.random() * 1.6 + 0.3;
+          ctx.globalAlpha = 0.12 + Math.random() * 0.24;
+          ctx.fillStyle = x > 820 ? '#38bdf8' : fleck;
+          ctx.fillRect(x, y, r * 5.2, Math.max(0.6, r * 0.35));
+        }
+      } else if (mode === 'forest') {
+        // Rich organic forest floor with moss, emerald turf, and exposed soil patches
+        const palette = ['#2d6a36', '#4a8c3f', '#1d4d27', '#6b532e'];
+        for (let i = 0; i < 24000; i++) {
+          const x = Math.random() * 1024, y = Math.random() * 1024;
+          const r = Math.random() * 2.8 + 0.5;
+          ctx.globalAlpha = 0.14 + Math.random() * 0.30;
+          ctx.fillStyle = palette[i % palette.length];
+          ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+        }
+      } else if (mode === 'soilSide') {
+        // Stratified loamy earth cross-section: dark humus top -> clay subsoil -> rocky mineral flecks
+        const soilGrad = ctx.createLinearGradient(0, 0, 0, 1024);
+        soilGrad.addColorStop(0.0, '#1f140c');
+        soilGrad.addColorStop(0.24, '#2b1d12');
+        soilGrad.addColorStop(0.62, '#4a321f');
+        soilGrad.addColorStop(1.0, '#362315');
+        ctx.fillStyle = soilGrad;
+        ctx.fillRect(0, 0, 1024, 1024);
+
+        const strataColors = ['#180f08', '#5e4028', '#78553a', '#261910'];
+        for (let i = 0; i < 18000; i++) {
+          const x = Math.random() * 1024, y = Math.random() * 1024;
+          const r = Math.random() * 3.0 + 0.5;
+          ctx.globalAlpha = 0.16 + Math.random() * 0.28;
+          ctx.fillStyle = strataColors[i % strataColors.length];
+          ctx.beginPath(); ctx.ellipse(x, y, r * 1.8, r * 0.75, 0, 0, Math.PI * 2); ctx.fill();
+        }
+      } else if (mode === 'urban') {
+        // High-contrast dark charcoal asphalt with micro-aggregate grain & crisp road network
+        for (let i = 0; i < 22000; i++) {
+          const x = Math.random() * 1024, y = Math.random() * 1024;
+          const r = Math.random() * 1.8 + 0.4;
+          ctx.globalAlpha = 0.12 + Math.random() * 0.22;
+          ctx.fillStyle = i % 2 === 0 ? '#2c3540' : '#13181e';
+          ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+        }
+        // Subtle asphalt road corridors & yellow/white lane markings
+        ctx.globalAlpha = 0.85;
+        ctx.fillStyle = '#181e24';
+        ctx.fillRect(0, 440, 1024, 120);
+        ctx.fillRect(450, 0, 110, 1024);
+
+        ctx.strokeStyle = '#fbbf24';
+        ctx.lineWidth = 4;
+        ctx.setLineDash([24, 22]);
+        ctx.beginPath(); ctx.moveTo(0, 500); ctx.lineTo(1024, 500); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(505, 0); ctx.lineTo(505, 1024); ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Crisp white crosswalk stripes at intersection
+        ctx.fillStyle = '#e2e8f0';
+        for (let s = 456; s <= 548; s += 16) {
+          ctx.fillRect(416, s, 24, 8);
+          ctx.fillRect(570, s, 24, 8);
+        }
+      } else {
+        for (let i = 0; i < 18000; i++) {
+          const x = Math.random() * 1024, y = Math.random() * 1024;
+          const r = Math.random() * 2.2 + 0.4;
+          ctx.globalAlpha = 0.12 + Math.random() * 0.25;
+          ctx.fillStyle = fleck;
+          ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+        }
+      }
+      ctx.globalAlpha = 1;
+      const tex = new THREE.CanvasTexture(canvas);
+      tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+      tex.repeat.set(mode === 'water' || mode === 'soilSide' ? 1 : 1.35, mode === 'soilSide' ? 1 : 1.35);
+      tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
+      return tex;
     }
 
+    const waterMap = makeSurfaceMap('#032b43', '#0e7490', 'water');
+    const forestMap = makeSurfaceMap('#14381e', '#4a8c3f', 'forest');
+    const soilSideMap = makeSurfaceMap('#2b1d12', '#4a321f', 'soilSide');
+    const urbanMap = makeSurfaceMap('#1e252d', '#334155', 'urban');
+
     // --- 2. BUILD SCENE ELEMENTS ---
-    
-    // Flat Blue Cast Shadow Plane
+    // Studio floor with radial stage illumination + architectural plinth base
     const shadowPlane = new THREE.Mesh(
-      new THREE.PlaneGeometry(30, 30),
-      new THREE.MeshBasicMaterial({ color: 0x3b82f6, transparent: true, opacity: 0.1, depthWrite: false })
+      new THREE.PlaneGeometry(52, 52),
+      new THREE.MeshStandardMaterial({ color: 0x050c14, roughness: 0.92, metalness: 0.08 })
     );
     shadowPlane.rotation.x = -Math.PI / 2;
-    shadowPlane.position.y = -2;
+    shadowPlane.position.y = -1.62;
+    shadowPlane.receiveShadow = true;
     scene.add(shadowPlane);
 
-    // Terrain Zones (Water, Forest, Urban)
+    // Subtle radial studio stage glow directly under the floating diorama
+    const stageGlow = new THREE.Mesh(
+      new THREE.CircleGeometry(9.4, 96),
+      new THREE.MeshBasicMaterial({ color: 0x12364a, transparent: true, opacity: 0.40 })
+    );
+    stageGlow.rotation.x = -Math.PI / 2;
+    stageGlow.position.y = -1.60;
+    scene.add(stageGlow);
+
+    const gridHelper = new THREE.GridHelper(34, 34, 0x1e4e6e, 0x0e2436);
+    gridHelper.position.y = -1.59;
+    gridHelper.material.transparent = true;
+    gridHelper.material.opacity = 0.34;
+    scene.add(gridHelper);
+
+    // Three adjacent study areas form a scientific terrain model
     const terrainGrp = new THREE.Group();
     scene.add(terrainGrp);
 
-    // Zone 0: Calm Water (Left)
-    const waterBase = addInkEdges(new THREE.Mesh(new THREE.BoxGeometry(4, 1.5, 6), createToonMaterial(0x0284c7)));
-    waterBase.position.set(-4, -0.75, 0);
-    terrainGrp.add(waterBase);
-    
-    const waterCore = new THREE.Mesh(new THREE.BoxGeometry(3, 0.8, 5), new THREE.MeshBasicMaterial({ color: 0x0369a1 }));
-    waterCore.position.copy(waterBase.position);
+    // Circular scientific terrain island and thin illuminated perimeter rim.
+    const islandRadius = 6.88;
+    const plinthGeo = new THREE.CylinderGeometry(islandRadius, islandRadius, 0.24, 128);
+    const plinthMat = new THREE.MeshStandardMaterial({ color: 0x172b39, roughness: 0.58, metalness: 0.28 });
+    const plinthMesh = new THREE.Mesh(plinthGeo, plinthMat);
+    plinthMesh.position.set(0, -1.47, 0);
+    plinthMesh.castShadow = true;
+    plinthMesh.receiveShadow = true;
+    terrainGrp.add(plinthMesh);
+
+    const plinthTrim = new THREE.Mesh(
+      new THREE.TorusGeometry(islandRadius - 0.025, 0.025, 8, 128),
+      new THREE.MeshBasicMaterial({ color: 0x36a9c7, transparent: true, opacity: 0.48 })
+    );
+    plinthTrim.rotation.x = Math.PI / 2;
+    plinthTrim.position.set(0, -1.335, 0);
+    terrainGrp.add(plinthTrim);
+
+    const waterMat = registerCutawayMat(new THREE.MeshStandardMaterial({ map: waterMap, color: 0x0b5d7a, roughness: 0.28, metalness: 0.18 }), 1.0, 0.18);
+    // Grassland becomes noticeably translucent in dielectric mode, while the river stays readable.
+    const forestMat = registerCutawayMat(new THREE.MeshStandardMaterial({ map: forestMap, color: 0xffffff, roughness: 0.90 }), 1.0, 0.30);
+    const urbanMat = registerCutawayMat(new THREE.MeshStandardMaterial({ map: urbanMap, color: 0xffffff, roughness: 0.85 }), 1.0, 0.32);
+    const sideWater = registerCutawayMat(new THREE.MeshStandardMaterial({ color: 0x04354d, roughness: 0.45, metalness: 0.1 }), 1.0, 0.15);
+    const sideSoil = registerCutawayMat(new THREE.MeshStandardMaterial({ map: soilSideMap, color: 0xffffff, roughness: 0.96 }), 1.0, 0.15);
+    const sideUrban = registerCutawayMat(new THREE.MeshStandardMaterial({ color: 0x293545, roughness: 0.82 }), 1.0, 0.26);
+
+    // One continuous circular landform. The three observation zones remain
+    // distinct on its top surface while sharing a rounded geological edge.
+    const islandSideMat = new THREE.MeshStandardMaterial({ color: 0x344b55, roughness: 0.88 });
+    const islandTopMat = registerCutawayMat(new THREE.MeshStandardMaterial({ map: forestMap, color: 0x9ab58a, roughness: 0.96 }), 1.0, 0.28);
+    const islandBase = new THREE.Mesh(
+      new THREE.CylinderGeometry(islandRadius, islandRadius, 1.35, 128, 1, false),
+      [islandSideMat, islandTopMat, islandSideMat]
+    );
+    islandBase.position.set(0, -0.675, 0);
+    islandBase.castShadow = true;
+    islandBase.receiveShadow = true;
+    terrainGrp.add(islandBase);
+
+    // Forest and urban surface panels sit flush on the circular island.
+    const forestSurface = new THREE.Mesh(new THREE.PlaneGeometry(4, 6), forestMat);
+    forestSurface.rotation.x = -Math.PI / 2;
+    forestSurface.position.set(0, 0.012, 0);
+    forestSurface.receiveShadow = true;
+    terrainGrp.add(forestSurface);
+
+    const urbanSurface = new THREE.Mesh(new THREE.PlaneGeometry(4, 6), urbanMat);
+    urbanSurface.rotation.x = -Math.PI / 2;
+    urbanSurface.position.set(4, 0.014, 0);
+    urbanSurface.receiveShadow = true;
+    terrainGrp.add(urbanSurface);
+
+    // Glowing Internal Dielectric Strata Cores (revealed in See-Through mode)
+    const waterCoreMat = new THREE.MeshStandardMaterial({
+      color: 0x0284c7, emissive: 0x06b6d4, emissiveIntensity: 0.95,
+      roughness: 0.18, metalness: 0.12, transparent: true, opacity: 0.90
+    });
+    const waterCore = new THREE.Mesh(new THREE.BoxGeometry(3.2, 0.82, 5.2), waterCoreMat);
+    waterCore.position.set(-4, -0.68, 0);
     waterCore.visible = false;
+    const waterCoreEdges = new THREE.LineSegments(
+      new THREE.EdgesGeometry(new THREE.BoxGeometry(3.22, 0.84, 5.22)),
+      new THREE.LineBasicMaterial({ color: 0x67e8f9, transparent: true, opacity: 0.9 })
+    );
+    waterCore.add(waterCoreEdges);
     scene.add(waterCore);
     innerMeshes.push(waterCore);
-    dielectricTargets.water.set(-4, 0, 0);
 
-    // Zone 1: Forest (Middle)
-    const soilBase = addInkEdges(new THREE.Mesh(new THREE.BoxGeometry(4, 1.5, 6), createToonMaterial(0x65a30d)));
-    soilBase.position.set(0, -0.75, 0);
-    terrainGrp.add(soilBase);
-
-    const soilCore = new THREE.Mesh(new THREE.BoxGeometry(3, 0.8, 5), new THREE.MeshBasicMaterial({ color: 0xb45309 }));
-    soilCore.position.copy(soilBase.position);
+    const soilCoreMat = new THREE.MeshStandardMaterial({
+      color: 0xd97706, emissive: 0xf59e0b, emissiveIntensity: 0.78,
+      roughness: 0.50, metalness: 0.08, transparent: true, opacity: 0.88
+    });
+    const soilCore = new THREE.Mesh(new THREE.BoxGeometry(3.2, 0.82, 5.2), soilCoreMat);
+    soilCore.position.set(0, -0.68, 0);
     soilCore.visible = false;
+    const soilCoreEdges = new THREE.LineSegments(
+      new THREE.EdgesGeometry(new THREE.BoxGeometry(3.22, 0.84, 5.22)),
+      new THREE.LineBasicMaterial({ color: 0xfde68a, transparent: true, opacity: 0.9 })
+    );
+    soilCore.add(soilCoreEdges);
     scene.add(soilCore);
     innerMeshes.push(soilCore);
-    dielectricTargets.soil.set(0, 0, 0);
 
-    // Trees
-    for(let i=0; i<4; i++) {
-      const x = -1 + Math.random()*2;
-      const z = -2 + Math.random()*4;
-      const trunk = addInkEdges(new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 0.4), createToonMaterial(0x78350f)));
-      trunk.position.set(x, 0.2, z);
-      const canopy = addInkEdges(new THREE.Mesh(new THREE.ConeGeometry(0.5, 1, 4), createToonMaterial(0x16a34a)));
-      canopy.position.set(0, 0.7, 0);
-      trunk.add(canopy);
-      terrainGrp.add(trunk);
+    dielectricTargets.water.set(-4 * 1.13, -0.55, 0);
+    dielectricTargets.soil.set(0, -0.55, 0);
+
+    // Original-style calm water surface, extended to the circular island edge.
+    // The curved outer bank follows the island circumference; the inner bank stays straight.
+    const waterSurfaceMat = registerCutawayMat(new THREE.MeshPhysicalMaterial({
+      color: 0x0b718b,
+      emissive: 0x012b3a,
+      emissiveIntensity: 0.14,
+      roughness: 0.19,
+      metalness: 0.16,
+      clearcoat: 0.92,
+      clearcoatRoughness: 0.10,
+      transparent: true,
+      opacity: 0.94,
+      side: THREE.DoubleSide
+    }), 0.94, 0.30);
+
+    const waterShape = new THREE.Shape();
+    const waterHalfLength = 2.98;
+    const waterInnerBankX = -2.04;
+    waterShape.moveTo(waterInnerBankX, waterHalfLength);
+    const waterEdgeSteps = 72;
+    for (let i = 0; i <= waterEdgeSteps; i++) {
+      const z = -waterHalfLength + (2 * waterHalfLength * i / waterEdgeSteps);
+      const edgeX = -Math.sqrt(Math.max(0, islandRadius * islandRadius - z * z));
+      waterShape.lineTo(edgeX, -z);
     }
+    waterShape.lineTo(waterInnerBankX, -waterHalfLength);
+    waterShape.closePath();
 
-    // Zone 2: Urban (Right)
-    const urbanBase = addInkEdges(new THREE.Mesh(new THREE.BoxGeometry(4, 1.5, 6), createToonMaterial(0x94a3b8)));
-    urbanBase.position.set(4, -0.75, 0);
-    terrainGrp.add(urbanBase);
+    const waterSurface = new THREE.Mesh(new THREE.ShapeGeometry(waterShape, 2), waterSurfaceMat);
+    waterSurface.rotation.x = -Math.PI / 2;
+    waterSurface.position.y = 0.032;
+    waterSurface.receiveShadow = true;
+    terrainGrp.add(waterSurface);
 
-    // Buildings
-    const bldgs = [
-      {x: 3.5, z: -1.5, w: 1, h: 2, d: 1}, {x: 4.8, z: -1.0, w: 1.2, h: 1.5, d: 1.2},
-      {x: 3.8, z: 1.5, w: 1.5, h: 1, d: 1.5}
-    ];
-    bldgs.forEach(b => {
-      const mesh = addInkEdges(new THREE.Mesh(new THREE.BoxGeometry(b.w, b.h, b.d), createToonMaterial(0xe2e8f0)));
-      mesh.position.set(b.x, b.h/2, b.z);
-      terrainGrp.add(mesh);
+    // A fixed waterfall curtain drops from the curved water edge down the island side.
+    // It is deliberately static: no floating blobs, animated foam, or moving river objects.
+    const waterfallVertices = [];
+    const waterfallIndices = [];
+    const waterfallSteps = 72;
+    for (let i = 0; i <= waterfallSteps; i++) {
+      const z = -waterHalfLength + (2 * waterHalfLength * i / waterfallSteps);
+      const x = -Math.sqrt(Math.max(0, islandRadius * islandRadius - z * z));
+      waterfallVertices.push(x, 0.025, z, x, -1.31, z);
+      if (i < waterfallSteps) {
+        const a = i * 2;
+        waterfallIndices.push(a, a + 1, a + 2, a + 1, a + 3, a + 2);
+      }
+    }
+    const waterfallGeometry = new THREE.BufferGeometry();
+    waterfallGeometry.setAttribute('position', new THREE.Float32BufferAttribute(waterfallVertices, 3));
+    waterfallGeometry.setIndex(waterfallIndices);
+    waterfallGeometry.computeVertexNormals();
+    const waterfallMaterial = new THREE.MeshPhysicalMaterial({
+      color: 0x13a6c5,
+      emissive: 0x07536a,
+      emissiveIntensity: 0.34,
+      roughness: 0.20,
+      metalness: 0.08,
+      transparent: true,
+      opacity: 0.88,
+      side: THREE.DoubleSide,
+      depthWrite: true
+    });
+    const waterfall = new THREE.Mesh(waterfallGeometry, waterfallMaterial);
+    waterfall.castShadow = false;
+    waterfall.receiveShadow = true;
+    terrainGrp.add(waterfall);
+
+    // Subtle, non-animated vertical highlights make the falling-water face readable.
+    const waterfallLines = [];
+    for (let i = 3; i < waterfallSteps; i += 6) {
+      const z = -waterHalfLength + (2 * waterHalfLength * i / waterfallSteps);
+      const x = -Math.sqrt(Math.max(0, islandRadius * islandRadius - z * z)) - 0.012;
+      waterfallLines.push(new THREE.Vector3(x, -0.06, z), new THREE.Vector3(x, -1.22, z));
+    }
+    const waterfallLineGeometry = new THREE.BufferGeometry().setFromPoints(waterfallLines);
+    const waterfallLineMaterial = new THREE.LineBasicMaterial({ color: 0x9cefff, transparent: true, opacity: 0.48 });
+    terrainGrp.add(new THREE.LineSegments(waterfallLineGeometry, waterfallLineMaterial));
+
+    // Static pale-cyan shoreline edge along the forest-facing bank.
+    const shorelineFoamMat = new THREE.MeshBasicMaterial({
+      color: 0x9beeff,
+      transparent: true,
+      opacity: 0.42,
+      side: THREE.DoubleSide
+    });
+    const shorelineFoam = new THREE.Mesh(new THREE.PlaneGeometry(0.10, 5.94), shorelineFoamMat);
+    shorelineFoam.rotation.x = -Math.PI / 2;
+    shorelineFoam.position.set(-2.04, 0.045, 0);
+    terrainGrp.add(shorelineFoam);
+
+    // Forest: dark textured bark and multi-toned canopies (deep pine base -> sunlit chartreuse-emerald crown)
+    const trunkMat = new THREE.MeshStandardMaterial({ color: 0x3d2414, roughness: 0.96 });
+    const shadedLeafMats = [0x0f4c28, 0x165e32].map(c => new THREE.MeshStandardMaterial({ color: c, roughness: 0.90 }));
+    const sunlitLeafMats = [0x2d8a3e, 0x4ea843, 0x3b9642].map(c => new THREE.MeshStandardMaterial({ color: c, roughness: 0.82 }));
+    const allLeafMats = [...shadedLeafMats, ...sunlitLeafMats];
+
+    const treePositions = [[-1.25,-1.8],[.85,-1.45],[-.8,.65],[-1.35,2.0],[.55,-.1]];
+    treePositions.forEach(([x,z], i) => {
+      const h = 1.05 + (i % 3) * 0.24;
+      const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.075, 0.13, h, 10), trunkMat);
+      trunk.position.set(x, h / 2, z);
+      trunk.castShadow = true;
+      trunk.receiveShadow = true;
+      terrainGrp.add(trunk);
+
+      const crown = new THREE.Group();
+      crown.position.set(x, h * 0.78, z);
+      // Three overlapping, slightly irregular foliage masses create a natural
+      // broadleaf silhouette instead of the toy-like cluster of round balls.
+      for (let j = 0; j < 3; j++) {
+        const radius = 0.43 + (j % 2) * 0.07 + (i % 3) * 0.025;
+        const geo = new THREE.SphereGeometry(radius, 24, 18);
+        const pos = geo.attributes.position;
+        for (let v = 0; v < pos.count; v++) {
+          const vx = pos.getX(v), vy = pos.getY(v), vz = pos.getZ(v);
+          const waviness = 1 + 0.055 * Math.sin(vx * 13 + i) * Math.cos(vz * 11 + j) + 0.025 * Math.sin(vy * 17 + i * 2);
+          pos.setXYZ(v, vx * waviness, vy * waviness, vz * waviness);
+        }
+        geo.computeVertexNormals();
+        const matPool = j === 0 ? shadedLeafMats : sunlitLeafMats;
+        const mass = new THREE.Mesh(geo, matPool[(i + j) % matPool.length]);
+        const angle = (j / 3) * Math.PI * 2 + i * 0.51;
+        mass.position.set(Math.cos(angle) * 0.19, (j - 1) * 0.19, Math.sin(angle) * 0.17);
+        mass.scale.set(1.12 + (i % 2) * 0.08, 0.82 + (j % 2) * 0.08, 1.0);
+        mass.castShadow = true;
+        mass.receiveShadow = true;
+        crown.add(mass);
+      }
+      // A few fine branch tips remain visible beneath the crown for depth.
+      for (let b = 0; b < 3; b++) {
+        const branch = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.035, 0.36, 7), trunkMat);
+        branch.position.set((b - 1) * 0.13, -0.16, (b % 2 ? 0.12 : -0.10));
+        branch.rotation.z = (b - 1) * 0.42;
+        crown.add(branch);
+      }
+      terrainGrp.add(crown);
     });
 
-    // Satellites
-    const s1Pos = new THREE.Vector3(-4, 6, 2);
-    const s1Grp = new THREE.Group();
-    s1Grp.position.copy(s1Pos);
-    const s1Body = addInkEdges(new THREE.Mesh(new THREE.BoxGeometry(1,1,1.5), createToonMaterial(0xd4d4d8)));
-    const s1Antenna = addInkEdges(new THREE.Mesh(new THREE.BoxGeometry(2.5, 0.1, 0.8), createToonMaterial(0x06b6d4)));
-    s1Antenna.position.set(0.5, -0.6, 0);
-    s1Antenna.rotation.z = Math.PI / 4; // Tilted toward terrain
-    s1Grp.add(s1Body, s1Antenna);
+    // Low shrubs and moss tufts break up the forest floor
+    for(let i = 0; i < 20; i++){
+      const shrub = new THREE.Mesh(new THREE.SphereGeometry(0.085 + Math.random() * 0.09, 9, 7), allLeafMats[i % allLeafMats.length]);
+      shrub.scale.y = 0.55;
+      shrub.position.set(-1.82 + Math.random() * 3.64, 0.08, -2.72 + Math.random() * 5.44);
+      shrub.castShadow = true;
+      shrub.receiveShadow = true;
+      terrainGrp.add(shrub);
+    }
+
+    // Meadow details: scattered low rocks, flowering ground cover and grass clumps
+    // add scale and texture without crowding the existing tree canopy.
+    const meadowRockMat = new THREE.MeshStandardMaterial({ color: 0x8c9b83, roughness: 0.96 });
+    const flowerMats = [0xf2d58a, 0xd8e9c7, 0xb7d9d0].map(c => new THREE.MeshStandardMaterial({ color: c, roughness: 0.82 }));
+    const meadowDetails = [
+      [-1.72,-2.55],[0.15,-2.72],[1.35,-2.48],
+      [-1.78,2.62],[0.42,2.65],[1.72,1.55]
+    ];
+    meadowDetails.forEach(([x,z], i) => {
+      const rock = new THREE.Mesh(new THREE.DodecahedronGeometry(0.10 + (i % 3) * 0.025, 0), meadowRockMat);
+      rock.position.set(x, 0.075, z);
+      rock.scale.set(1.35, 0.72, 0.92);
+      rock.rotation.y = i * 0.73;
+      rock.castShadow = true;
+      terrainGrp.add(rock);
+      if (i % 2 === 0) {
+        const flower = new THREE.Mesh(new THREE.SphereGeometry(0.045, 8, 6), flowerMats[i % flowerMats.length]);
+        flower.position.set(x + 0.18, 0.09, z - 0.12);
+        terrainGrp.add(flower);
+      }
+    });
+    const grassBladeMat = new THREE.MeshStandardMaterial({ color: 0x86ad58, roughness: 0.9 });
+    for (let i = 0; i < 8; i++) {
+      const x = -1.85 + Math.random() * 3.7;
+      const z = -2.85 + Math.random() * 5.7;
+      const blade = new THREE.Mesh(new THREE.ConeGeometry(0.035, 0.20 + Math.random() * 0.12, 5), grassBladeMat);
+      blade.position.set(x, 0.12, z);
+      blade.rotation.z = (Math.random() - 0.5) * 0.32;
+      terrainGrp.add(blade);
+    }
+    // Fine mixed-height grass tufts add scale and break up the flat green plane.
+    const grassFineMats = [0x527f3c, 0x789b4c, 0x9ab56a].map(c => new THREE.MeshStandardMaterial({ color: c, roughness: 0.96 }));
+    for (let i = 0; i < 20; i++) {
+      const x = -1.88 + Math.random() * 3.76;
+      const z = -2.88 + Math.random() * 5.76;
+      const tuft = new THREE.Group();
+      for (let k = 0; k < 3; k++) {
+        const blade = new THREE.Mesh(new THREE.ConeGeometry(0.018, 0.10 + Math.random() * 0.10, 4), grassFineMats[(i + k) % grassFineMats.length]);
+        blade.position.set((Math.random() - 0.5) * 0.075, 0.07, (Math.random() - 0.5) * 0.075);
+        blade.rotation.z = (Math.random() - 0.5) * 0.38;
+        tuft.add(blade);
+      }
+      tuft.position.set(x, 0.035, z);
+      terrainGrp.add(tuft);
+    }
+
+
+    // A few small pedestrians on existing clear paths and paved areas.
+    // Kept deliberately simple and static in position to avoid interfering
+    // with terrain geometry, river/waterfall, or sensor target coordinates.
+    const pedestrianGroups = [];
+    const pedestrianClothes = [
+      new THREE.MeshStandardMaterial({ color: 0x2875a8, roughness: 0.86 }),
+      new THREE.MeshStandardMaterial({ color: 0xb65a35, roughness: 0.86 }),
+      new THREE.MeshStandardMaterial({ color: 0x4b8060, roughness: 0.88 })
+    ];
+    const pedestrianSkin = new THREE.MeshStandardMaterial({ color: 0xb98263, roughness: 0.9 });
+    const pedestrianLegMat = new THREE.MeshStandardMaterial({ color: 0x26364a, roughness: 0.9 });
+    function addSmallPedestrian(x, z, scale, outfit) {
+      const person = new THREE.Group();
+      person.position.set(x, 0.04, z);
+      person.scale.setScalar(scale);
+      terrainGrp.add(person);
+
+      const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.075, 0.095, 0.25, 8), pedestrianClothes[outfit % pedestrianClothes.length]);
+      torso.position.y = 0.36;
+      torso.castShadow = true;
+      person.add(torso);
+
+      const head = new THREE.Mesh(new THREE.SphereGeometry(0.067, 10, 8), pedestrianSkin);
+      head.position.y = 0.55;
+      head.castShadow = true;
+      person.add(head);
+
+      const legs = [];
+      for (const side of [-1, 1]) {
+        const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.027, 0.025, 0.20, 7), pedestrianLegMat);
+        leg.position.set(side * 0.035, 0.16, 0);
+        leg.castShadow = true;
+        person.add(leg);
+        legs.push(leg);
+      }
+      pedestrianGroups.push({ person, legs, phase: Math.random() * Math.PI * 2, x, z, path: x < 1.5 ? 0.34 : 0.22 });
+    }
+
+    // Two subtle figures on garden paths and two on the city pavement.
+    addSmallPedestrian(-1.45, 0.92, 0.78, 0);
+    addSmallPedestrian(0.78, 2.35, 0.76, 2);
+    addSmallPedestrian(2.62, 2.76, 0.82, 1);
+    addSmallPedestrian(5.20, 2.76, 0.82, 0);
+
+    // Urban district: high-contrast concrete sidewalks with curb bevels + 4 distinct architectural facades
+    const sidewalkMat = new THREE.MeshStandardMaterial({ color: 0x94a3b8, roughness: 0.76, metalness: 0.06 });
+    const curbMat = new THREE.MeshStandardMaterial({ color: 0x64748b, roughness: 0.7 });
+    const sidewalkBlocks = [
+      { x: 3.95, z: -0.55, w: 3.55, d: 4.55 },
+      { x: 3.95, z: 2.68, w: 3.55, d: 0.48 }
+    ];
+    sidewalkBlocks.forEach(sb => {
+      const pad = new THREE.Mesh(new THREE.BoxGeometry(sb.w, 0.055, sb.d), sidewalkMat);
+      pad.position.set(sb.x, 0.028, sb.z);
+      pad.receiveShadow = true;
+      terrainGrp.add(pad);
+
+      const curbTrim = new THREE.LineSegments(
+        new THREE.EdgesGeometry(new THREE.BoxGeometry(sb.w, 0.056, sb.d)),
+        new THREE.LineBasicMaterial({ color: 0xcbd5e1, transparent: true, opacity: 0.45 })
+      );
+      curbTrim.position.copy(pad.position);
+      terrainGrp.add(curbTrim);
+    });
+
+    // 4 distinct contrasting architectural facade materials
+    const facadeMaterials = [
+      new THREE.MeshStandardMaterial({ color: 0xcbd5e1, roughness: 0.72, metalness: 0.08 }), // Warm limestone/sandstone
+      new THREE.MeshStandardMaterial({ color: 0x475569, roughness: 0.68, metalness: 0.18 }), // Slate architectural concrete
+      new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.45, metalness: 0.42 }), // Dark steel-glass tower
+      new THREE.MeshStandardMaterial({ color: 0x9a6b56, roughness: 0.76, metalness: 0.06 })  // Terracotta-accented mid-rise
+    ];
+    const parapetMat = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.65, metalness: 0.25 });
+
+    const glassDay = new THREE.MeshPhysicalMaterial({
+      color: 0x0c4a6e, emissive: 0x07263b, emissiveIntensity: 0.30,
+      metalness: 0.65, roughness: 0.12, clearcoat: 1.0, clearcoatRoughness: 0.08
+    });
+    const glassNightLit = new THREE.MeshStandardMaterial({
+      color: 0xfde68a, emissive: 0xfbbf24, emissiveIntensity: 0.25,
+      roughness: 0.22, metalness: 0.2
+    });
+
+    const bldgs = [
+      {x:3.15, z:-1.65, w:1.08, h:1.80, d:1.18, matIdx: 0},
+      {x:4.60, z:-1.10, w:1.04, h:2.45, d:1.04, matIdx: 2},
+      {x:3.50, z:1.10,  w:1.48, h:1.20, d:1.32, matIdx: 3},
+      {x:5.05, z:1.25,  w:0.78, h:1.55, d:0.90, matIdx: 1}
+    ];
+    bldgs.forEach((b, i) => {
+      const building = new THREE.Mesh(new THREE.BoxGeometry(b.w, b.h, b.d), facadeMaterials[b.matIdx]);
+      building.position.set(b.x, b.h / 2 + 0.05, b.z);
+      building.castShadow = true;
+      building.receiveShadow = true;
+      terrainGrp.add(building);
+
+      // Architectural roof parapet & recessed roof deck
+      const roof = new THREE.Mesh(new THREE.BoxGeometry(b.w * 1.03, 0.09, b.d * 1.03), parapetMat);
+      roof.position.set(b.x, b.h + 0.09, b.z);
+      roof.castShadow = true;
+      roof.receiveShadow = true;
+      terrainGrp.add(roof);
+
+      // Front & side recessed reflective window grids
+      for(let row = 0; row < Math.floor(b.h / 0.32); row++){
+        for(let col = 0; col < Math.max(2, Math.floor(b.w / 0.25)); col++){
+          const isLit = ((row + col + i) % 3 !== 0);
+          const win = new THREE.Mesh(new THREE.BoxGeometry(0.13, 0.17, 0.02), isLit ? glassNightLit : glassDay);
+          win.position.set(b.x - b.w / 2 + 0.17 + col * 0.23, 0.31 + row * 0.30, b.z + b.d / 2 + 0.012);
+          terrainGrp.add(win);
+        }
+        for(let col = 0; col < Math.max(2, Math.floor(b.d / 0.26)); col++){
+          const isLit = ((row * 2 + col + i) % 3 === 0);
+          const winSide = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.17, 0.13), isLit ? glassNightLit : glassDay);
+          winSide.position.set(b.x + b.w / 2 + 0.012, 0.31 + row * 0.30, b.z - b.d / 2 + 0.17 + col * 0.24);
+          terrainGrp.add(winSide);
+        }
+      }
+      const hvac = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.14, 0.22), parapetMat);
+      hvac.position.set(b.x + 0.18, b.h + 0.20, b.z - 0.12);
+      hvac.castShadow = true;
+      terrainGrp.add(hvac);
+
+      // Slim floor-edge bands and restrained balconies make the facades read
+      // more like real mid-rise buildings at this miniature scale.
+      for (let level = 1; level < Math.floor(b.h / 0.62); level++) {
+        const band = new THREE.Mesh(new THREE.BoxGeometry(b.w * 1.012, 0.035, b.d * 1.012), parapetMat);
+        band.position.set(b.x, 0.22 + level * 0.62, b.z);
+        band.castShadow = true;
+        terrainGrp.add(band);
+      }
+      if (i === 0 || i === 2) {
+        for (let level = 0; level < 2; level++) {
+          const balcony = new THREE.Mesh(new THREE.BoxGeometry(b.w * 0.72, 0.045, 0.20), sidewalkMat);
+          balcony.position.set(b.x, 0.56 + level * 0.48, b.z + b.d / 2 + 0.09);
+          balcony.castShadow = true;
+          terrainGrp.add(balcony);
+          const rail = new THREE.Mesh(new THREE.BoxGeometry(b.w * 0.72, 0.075, 0.018), parapetMat);
+          rail.position.set(b.x, 0.63 + level * 0.48, b.z + b.d / 2 + 0.18);
+          terrainGrp.add(rail);
+        }
+      }
+    });
+
+    // Fine-scale urban context: dark asphalt road, crisp lane markings, streetlights & metallic vehicles with lights
+    const roadMat = new THREE.MeshStandardMaterial({ color: 0x161c22, roughness: 0.94 });
+    const roadCenterZ = 2.08;
+    // One road with two parallel traffic lanes: incoming and outgoing.
+    const road = new THREE.Mesh(new THREE.BoxGeometry(3.75, 0.03, 0.68), roadMat);
+    road.position.set(4.0, 0.02, roadCenterZ);
+    road.receiveShadow = true;
+    terrainGrp.add(road);
+
+    const laneMat = new THREE.MeshBasicMaterial({ color: 0xfbbf24 });
+    for (let i = 0; i < 6; i++) {
+      const dash = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.012, 0.025), laneMat);
+      dash.position.set(2.42 + i * 0.58, 0.04, roadCenterZ);
+      terrainGrp.add(dash);
+    }
+
+    const carMats = [0x0ea5e9, 0xe11d48, 0xf8fafc].map(c => new THREE.MeshStandardMaterial({ color: c, metalness: 0.52, roughness: 0.26 }));
+    const headlightMat = new THREE.MeshBasicMaterial({ color: 0xfef9c3 });
+    const taillightMat = new THREE.MeshBasicMaterial({ color: 0xef4444 });
+
+    const movingCars = [];
+    for (let i = 0; i < 3; i++) {
+      const car = new THREE.Group();
+      const carWheels = [];
+      const shell = new THREE.Mesh(new THREE.BoxGeometry(0.44, 0.13, 0.22), carMats[i]);
+      shell.position.y = 0.12;
+      shell.castShadow = true;
+      car.add(shell);
+
+      const cabin = new THREE.Mesh(new THREE.BoxGeometry(0.23, 0.11, 0.18), glassDay);
+      cabin.position.set(-0.015, 0.22, 0);
+      car.add(cabin);
+
+      // Headlights & taillights for realistic contrast
+      for (const lz of [-0.07, 0.07]) {
+        const hl = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.035, 0.045), headlightMat);
+        hl.position.set(0.225, 0.12, lz);
+        car.add(hl);
+        const tl = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.035, 0.045), taillightMat);
+        tl.position.set(-0.225, 0.12, lz);
+        car.add(tl);
+      }
+
+      for (const wx of [-0.13, 0.13]) for (const wz of [-0.12, 0.12]) {
+        const wheel = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 0.035, 12), new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 1 }));
+        wheel.rotation.x = Math.PI / 2;
+        wheel.position.set(wx, 0.07, wz);
+        car.add(wheel);
+        carWheels.push(wheel);
+      }
+      const laneIndex = i % 2;
+      const roadZ = roadCenterZ + (laneIndex === 0 ? -0.17 : 0.17);
+      const direction = laneIndex === 0 ? 1 : -1;
+      const initialX = 2.65 + (i === 2 ? 1.15 : 0.0);
+      car.position.set(initialX, 0.035, roadZ);
+      car.rotation.y = direction === 1 ? 0 : Math.PI;
+      terrainGrp.add(car);
+      // Keep vehicles separated within each lane while traffic flows in opposite directions.
+      const phase = i === 0 ? 0.05 : (i === 1 ? 0.30 : 0.55);
+      movingCars.push({ car, wheels: carWheels, startX: initialX, phase, roadZ, direction });
+    }
+
+    const poleMat = new THREE.MeshStandardMaterial({ color: 0x475569, metalness: 0.72, roughness: 0.32 });
+    const lampMat = new THREE.MeshStandardMaterial({ color: 0xfef08a, emissive: 0xfbbf24, emissiveIntensity: 0.45 });
+    const streetHalos = [];
+    const streetPointLights = [];
+    for (const z of [-2.45, 1.72]) {
+      const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.04, 0.88, 10), poleMat);
+      pole.position.set(5.65, 0.46, z);
+      pole.castShadow = true;
+      terrainGrp.add(pole);
+
+      const arm = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.035, 0.035), poleMat);
+      arm.position.set(5.52, 0.86, z);
+      terrainGrp.add(arm);
+
+      const lamp = new THREE.Mesh(new THREE.BoxGeometry(0.13, 0.055, 0.09), lampMat);
+      lamp.position.set(5.39, 0.83, z);
+      terrainGrp.add(lamp);
+
+      const halo = new THREE.Mesh(
+        new THREE.CircleGeometry(0.68, 24),
+        new THREE.MeshBasicMaterial({ color: 0xfbbf24, transparent: true, opacity: 0.10, blending: THREE.AdditiveBlending, depthWrite: false })
+      );
+      halo.rotation.x = -Math.PI / 2;
+      halo.position.set(5.39, 0.06, z);
+      terrainGrp.add(halo);
+      streetHalos.push(halo);
+      const lampLight = new THREE.PointLight(0xffc66b, 0.0, 2.2, 2);
+      lampLight.position.set(5.39, 0.78, z);
+      terrainGrp.add(lampLight);
+      streetPointLights.push(lampLight);
+    }
+
+    // Additional road and garden lights. Their warm pools of light are subtle
+    // in daylight and become more visible when Night Mode is enabled.
+    function addAreaLamp(x, z, height = 0.72, haloRadius = 0.48) {
+      const pole = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.018, 0.032, height, 10),
+        poleMat
+      );
+      pole.position.set(x, height / 2, z);
+      pole.castShadow = true;
+      terrainGrp.add(pole);
+
+      const arm = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.025, 0.025), poleMat);
+      arm.position.set(x + 0.085, height - 0.035, z);
+      terrainGrp.add(arm);
+
+      const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.065, 12, 10), lampMat);
+      bulb.position.set(x + 0.17, height - 0.055, z);
+      terrainGrp.add(bulb);
+
+      const halo = new THREE.Mesh(
+        new THREE.CircleGeometry(haloRadius, 28),
+        new THREE.MeshBasicMaterial({
+          color: 0xffc45c, transparent: true, opacity: 0.055,
+          blending: THREE.AdditiveBlending, depthWrite: false
+        })
+      );
+      halo.rotation.x = -Math.PI / 2;
+      halo.position.set(x + 0.17, 0.055, z);
+      terrainGrp.add(halo);
+      streetHalos.push(halo);
+      const lampLight = new THREE.PointLight(0xffc66b, 0.0, 1.7, 2);
+      lampLight.position.set(x + 0.17, height - 0.055, z);
+      terrainGrp.add(lampLight);
+      streetPointLights.push(lampLight);
+    }
+
+    // Extra lamps along the urban road, spaced so they do not obstruct vehicles.
+    [[2.55, 1.55], [3.75, 1.55], [4.85, 1.55]].forEach(([x, z]) =>
+      addAreaLamp(x, z, 0.78, 0.56)
+    );
+
+    // Small pathway lights in the garden, placed between tree clusters.
+    [[-1.65, -0.55], [0.85, 0.72], [-0.25, 2.55], [1.45, -1.85]].forEach(([x, z]) =>
+      addAreaLamp(x, z, 0.55, 0.38)
+    );
+
+    // Scale the terrain footprint slightly for readability
+    const terrainScale = 1.13;
+    terrainGrp.scale.set(terrainScale, 1, terrainScale);
+    waterCore.position.x *= terrainScale; waterCore.position.z *= terrainScale;
+    soilCore.position.x *= terrainScale; soilCore.position.z *= terrainScale;
+    waterCore.scale.set(terrainScale, 1, terrainScale);
+    soilCore.scale.set(terrainScale, 1, terrainScale);
+
+    // Sensor target points stay aligned with the enlarged terrain
+    const targets = [
+      new THREE.Vector3(-4 * terrainScale, 0.05, 0),
+      new THREE.Vector3(0, 0.25, 0),
+      new THREE.Vector3(3.5 * terrainScale, 0.05, 0)
+    ];
+
+    // Subtle sensor footprint rings on the terrain
+    const footprintRings = [];
+    targets.forEach((t, i) => {
+      const ring = new THREE.Mesh(
+        new THREE.RingGeometry(.72, .78, 64),
+        new THREE.MeshBasicMaterial({color:i===0?0x26c6da:i===1?0x78d68a:0xf0b35b,transparent:true,opacity:.45,side:THREE.DoubleSide})
+      );
+      ring.rotation.x=-Math.PI/2; ring.position.set(t.x, .04, t.z); ring.visible=false; terrainGrp.add(ring); footprintRings.push(ring);
+    });
+
+    // Satellite platforms: positioned at y = 6.2 so they frame cleanly within the camera view
+    const s1Pos = new THREE.Vector3(-3.8, 6.2, 1.8);
+    const spacecraftBody = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, metalness: .72, roughness: .24 });
+    const goldFoil = new THREE.MeshStandardMaterial({ color: 0xf59e0b, metalness: .78, roughness: .22 });
+    const panelMat = new THREE.MeshStandardMaterial({ color: 0x0f3d7a, metalness: .52, roughness: .28 });
+    const panelCellMat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, metalness: .45, roughness: .24, emissive: 0x082f49 });
+    function makeSolarWing(parent, x, width=2.0) {
+      const wing = new THREE.Group(); wing.position.set(x,0,0); parent.add(wing);
+      const backing = new THREE.Mesh(new THREE.BoxGeometry(width,.055,1.25), panelMat);
+      backing.castShadow = true; wing.add(backing);
+      for(let c=0;c<6;c++) {
+        const cell = new THREE.Mesh(new THREE.BoxGeometry(width/6-.025,.012,1.19),panelCellMat);
+        cell.position.set(-width/2+(c+.5)*width/6,.036,0); wing.add(cell);
+      }
+      for(let r=0;r<3;r++){
+        const line = new THREE.Mesh(new THREE.BoxGeometry(width,.014,.018),goldFoil);
+        line.position.set(0,.045,-.39+r*.39); wing.add(line);
+      }
+      return wing;
+    }
+    const s1Grp = new THREE.Group(); s1Grp.position.copy(s1Pos);
+    const s1Body = new THREE.Mesh(new THREE.BoxGeometry(.9,.72,1.15),spacecraftBody);
+    s1Body.castShadow=true; s1Grp.add(s1Body);
+    const s1Foil = new THREE.Mesh(new THREE.BoxGeometry(.88,.74,.05),goldFoil); s1Foil.position.z=.58; s1Grp.add(s1Foil);
+    makeSolarWing(s1Grp,-1.75,1.75); makeSolarWing(s1Grp,1.75,1.75);
+    // Sentinel-1's C-band SAR is represented as a broad planar phased-array
+    // antenna, rather than a dish, with a dark RF face and fine element grid.
+    const sarAntennaFrame = new THREE.Mesh(new THREE.BoxGeometry(1.62, .075, 1.08), goldFoil);
+    sarAntennaFrame.position.set(0, -.62, .22);
+    sarAntennaFrame.castShadow = true;
+    s1Grp.add(sarAntennaFrame);
+    const sarAntennaFace = new THREE.Mesh(new THREE.BoxGeometry(1.54, .018, 1.00), new THREE.MeshStandardMaterial({ color: 0x263746, metalness: .58, roughness: .32 }));
+    sarAntennaFace.position.set(0, -.572, .22);
+    s1Grp.add(sarAntennaFace);
+    const sarElementMat = new THREE.MeshStandardMaterial({ color: 0x9a7440, metalness: .68, roughness: .34 });
+    for (let row = 0; row < 4; row++) for (let col = 0; col < 7; col++) {
+      const element = new THREE.Mesh(new THREE.BoxGeometry(.14, .009, .16), sarElementMat);
+      element.position.set(-.66 + col * .22, -.558, -.19 + row * .27);
+      s1Grp.add(element);
+    }
+    const feed = new THREE.Mesh(new THREE.CylinderGeometry(.045, .06, .24, 12), goldFoil);
+    feed.position.set(0, -.43, .22);
+    s1Grp.add(feed);
+    const s1Antenna = new THREE.Mesh(new THREE.BoxGeometry(1.5,.035,.5),goldFoil); s1Antenna.position.set(0,-.8,.25); s1Grp.add(s1Antenna);
+    // Subtle cyan sensor beacon on S1
+    const s1Beacon = new THREE.Mesh(new THREE.SphereGeometry(0.11, 12, 12), new THREE.MeshBasicMaterial({ color: 0x22d3ee }));
+    s1Beacon.position.set(0, -0.82, 0.25);
+    s1Grp.add(s1Beacon);
     scene.add(s1Grp);
 
-    const s2Pos = new THREE.Vector3(4, 6, 2);
-    const s2Grp = new THREE.Group();
-    s2Grp.position.copy(s2Pos);
-    const s2Body = addInkEdges(new THREE.Mesh(new THREE.CylinderGeometry(0.6, 0.6, 1.5, 6), createToonMaterial(0xd4d4d8)));
-    s2Body.rotation.x = Math.PI / 2;
-    const s2Lens = addInkEdges(new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 0.2, 8), createToonMaterial(0x334155)));
-    s2Lens.position.set(0, -0.5, 0);
-    s2Lens.rotation.x = Math.PI / 2;
-    s2Grp.add(s2Body, s2Lens);
-    s2Grp.visible = false; // Default off
-    scene.add(s2Grp);
+    const s2Pos = new THREE.Vector3(3.8, 6.2, 1.8);
+    const s2Grp = new THREE.Group(); s2Grp.position.copy(s2Pos);
+    const s2Body = new THREE.Mesh(new THREE.CylinderGeometry(.42,.48,1.25,32),spacecraftBody);
+    s2Body.rotation.x=Math.PI/2; s2Body.castShadow=true; s2Grp.add(s2Body);
+    const s2Lens = new THREE.Mesh(new THREE.CylinderGeometry(.23,.28,.18,32),new THREE.MeshPhysicalMaterial({color:0x24a6c8,metalness:.52,roughness:.14}));
+    s2Lens.position.set(0,-.55,0); s2Lens.rotation.x=Math.PI/2; s2Grp.add(s2Lens);
+    makeSolarWing(s2Grp,-1.25,1.15); makeSolarWing(s2Grp,1.25,1.15);
+    const s2Gold = new THREE.Mesh(new THREE.SphereGeometry(.11,16,12),goldFoil); s2Gold.position.set(.2,.35,.25); s2Grp.add(s2Gold);
+    s2Grp.visible=false; scene.add(s2Grp);
 
-    // Environment: Sun & Clouds
-    const sunPos = new THREE.Vector3(8, 8, -4);
-    const sun = addInkEdges(new THREE.Mesh(new THREE.IcosahedronGeometry(0.8, 1), new THREE.MeshBasicMaterial({color: 0xfacc15})));
+    // Environment: Sun, Starfield & Volumetric Clouds
+    const sunPos = new THREE.Vector3(8.2, 8.4, -5.2);
+    // Warm saturated yellow sun with a clearly visible golden atmospheric glow.
+    const sun = new THREE.Mesh(
+      new THREE.SphereGeometry(0.55, 48, 36),
+      new THREE.MeshBasicMaterial({ color: 0xffd500, toneMapped: false })
+    );
+    const sunHalo = new THREE.Mesh(
+      new THREE.SphereGeometry(0.92, 40, 28),
+      new THREE.MeshBasicMaterial({ color: 0xffb000, transparent: true, opacity: 0.34, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false })
+    );
+    const sunOuterGlow = new THREE.Mesh(
+      new THREE.SphereGeometry(1.30, 40, 28),
+      new THREE.MeshBasicMaterial({ color: 0xffd21f, transparent: true, opacity: 0.12, blending: THREE.AdditiveBlending, depthWrite: false, toneMapped: false })
+    );
+    sun.add(sunHalo);
+    sun.add(sunOuterGlow);
     sun.position.copy(sunPos);
     scene.add(sun);
+    const sunLight = new THREE.PointLight(0xffc928, 0.75, 24, 1.8);
+    sunLight.position.copy(sunPos);
+    scene.add(sunLight);
 
+    // Night Mode Starfield
+    const starCount = 320;
+    const starGeo = new THREE.BufferGeometry();
+    const starCoords = new Float32Array(starCount * 3);
+    for (let i = 0; i < starCount; i++) {
+      starCoords[i * 3] = (Math.random() - 0.5) * 65;
+      starCoords[i * 3 + 1] = 2 + Math.random() * 28;
+      starCoords[i * 3 + 2] = (Math.random() - 0.5) * 65;
+    }
+    starGeo.setAttribute('position', new THREE.BufferAttribute(starCoords, 3));
+    const starMat = new THREE.PointsMaterial({ color: 0xdbeafe, size: 0.16, transparent: true, opacity: 0.0 });
+    const starField = new THREE.Points(starGeo, starMat);
+    scene.add(starField);
+
+    // Ambient Ionosphere / Atmospheric Dust Motes
+    const moteCount = 90;
+    const moteGeo = new THREE.BufferGeometry();
+    const moteCoords = new Float32Array(moteCount * 3);
+    const moteBaseY = new Float32Array(moteCount);
+    for (let i = 0; i < moteCount; i++) {
+      moteCoords[i * 3] = (Math.random() - 0.5) * 18;
+      moteBaseY[i] = 0.4 + Math.random() * 6.5;
+      moteCoords[i * 3 + 1] = moteBaseY[i];
+      moteCoords[i * 3 + 2] = (Math.random() - 0.5) * 14;
+    }
+    moteGeo.setAttribute('position', new THREE.BufferAttribute(moteCoords, 3));
+    const moteMat = new THREE.PointsMaterial({
+      color: 0x7dd3fc, size: 0.09, transparent: true, opacity: 0.32,
+      blending: THREE.AdditiveBlending, depthWrite: false
+    });
+    const dustMotes = new THREE.Points(moteGeo, moteMat);
+    scene.add(dustMotes);
+
+    // Clouds
     const cloudGrp = new THREE.Group();
-    cloudGrp.position.set(0, 3, 0);
-    for(let i=0; i<6; i++) {
-      const cx = -3 + Math.random()*6;
-      const cz = -2 + Math.random()*4;
-      const cr = 0.8 + Math.random()*0.5;
-      const cMesh = addInkEdges(new THREE.Mesh(new THREE.IcosahedronGeometry(cr, 1), createToonMaterial(0xffffff, 0.85)));
-      cMesh.position.set(cx, Math.random()*0.5, cz);
-      cloudGrp.add(cMesh);
+    cloudGrp.position.set(0, 2.85, 0);
+    const cloudClusters = [];
+    for(let i=0; i<5; i++) {
+      const cx=-3.2+Math.random()*6.4, cz=-2.2+Math.random()*4.4;
+      const cluster=new THREE.Group(); cluster.position.set(cx,Math.random()*.35,cz);
+      cluster.userData.baseX = cx;
+      cluster.userData.phase = Math.random() * Math.PI * 2;
+      for(let j=0;j<7;j++){
+        const puff=new THREE.Mesh(new THREE.SphereGeometry(.38+Math.random()*.24,24,18),
+          new THREE.MeshStandardMaterial({color:0xdce8ef,roughness:1.0,transparent:true,opacity:.72}));
+        puff.scale.set(1.45, 0.58 + Math.random() * 0.18, 1.05);
+        puff.position.set((Math.random()-.5)*1.0,(Math.random()-.5)*.18,(Math.random()-.5)*.72);
+        puff.castShadow = true;
+        cluster.add(puff);
+      }
+      cloudGrp.add(cluster);
+      cloudClusters.push(cluster);
     }
     cloudGrp.visible = false;
     scene.add(cloudGrp);
 
-    // Targets for beams
-    const targets = [
-      new THREE.Vector3(-4, 0, 0), // Water
-      new THREE.Vector3(0, 0.2, 0),  // Forest
-      new THREE.Vector3(3.5, 0, 0)   // Urban Ground (near building)
-    ];
-
-    // --- 3. ANIMATION SYSTEM (PARTICLES) ---
+    // --- 3. UPGRADED CINEMATIC SIGNAL PULSES & EXPANDING WAVEFRONT RINGS ---
     let particles = [];
-    const particleGeo = new THREE.SphereGeometry(0.15, 8, 8);
-    const matS1 = new THREE.MeshBasicMaterial({ color: 0x06b6d4 }); // SAR Cyan
-    const matS2 = new THREE.MeshBasicMaterial({ color: 0xeab308 }); // Optical Yellow
+    let shockwaves = [];
+    let speedMultiplier = 1;
+    let isPaused = false;
+    let cutawayTargetOpacity = 0;
 
-    function spawnParticle(start, end, mat, speed, onComplete) {
-      const mesh = new THREE.Mesh(particleGeo, mat);
-      mesh.position.copy(start);
-      scene.add(mesh);
-      particles.push({ mesh, start: start.clone(), end: end.clone(), progress: 0, speed, onComplete });
+    const particleCoreGeo = new THREE.SphereGeometry(0.13, 12, 12);
+    const particleHaloGeo = new THREE.SphereGeometry(0.28, 12, 12);
+    const matS1 = new THREE.MeshBasicMaterial({ color: 0x67e8f9 });
+    const matS1Halo = new THREE.MeshBasicMaterial({ color: 0x06b6d4, transparent: true, opacity: 0.42, blending: THREE.AdditiveBlending, depthWrite: false });
+    const matS2 = new THREE.MeshBasicMaterial({ color: 0xfef08a });
+    const matS2Halo = new THREE.MeshBasicMaterial({ color: 0xf59e0b, transparent: true, opacity: 0.42, blending: THREE.AdditiveBlending, depthWrite: false });
+
+    function spawnShockwave(pos, hexColor, maxScale = 2.6, tiltX = -Math.PI / 2) {
+      const ringGeo = new THREE.RingGeometry(0.16, 0.26, 48);
+      const ringMat = new THREE.MeshBasicMaterial({
+        color: hexColor,
+        transparent: true,
+        opacity: 0.9,
+        side: THREE.DoubleSide,
+        blending: THREE.AdditiveBlending,
+        depthWrite: false
+      });
+      const ring = new THREE.Mesh(ringGeo, ringMat);
+      ring.position.copy(pos);
+      ring.position.y += 0.05;
+      ring.rotation.x = tiltX;
+      scene.add(ring);
+      shockwaves.push({ mesh: ring, mat: ringMat, progress: 0, maxScale });
+    }
+
+    function spawnParticle(start, end, isSAR, speed, onComplete, visualScale = 1, trailOpacity = 0.65, followEnd = null) {
+      const group = new THREE.Group();
+      group.scale.setScalar(visualScale);
+      const core = new THREE.Mesh(particleCoreGeo, isSAR ? matS1 : matS2);
+      const halo = new THREE.Mesh(particleHaloGeo, isSAR ? matS1Halo : matS2Halo);
+      group.add(core);
+      group.add(halo);
+      group.position.copy(start);
+      scene.add(group);
+
+      // Additive beam trail line connecting start to current pulse head
+      const lineGeo = new THREE.BufferGeometry().setFromPoints([start.clone(), start.clone()]);
+      const lineMat = new THREE.LineBasicMaterial({
+        color: isSAR ? 0x22d3ee : 0xfbbf24,
+        transparent: true,
+        opacity: trailOpacity,
+        blending: THREE.AdditiveBlending
+      });
+      const beamLine = new THREE.Line(lineGeo, lineMat);
+      scene.add(beamLine);
+
+      particles.push({
+        mesh: group,
+        beamLine,
+        lineMat,
+        start: start.clone(),
+        end: end.clone(),
+        followEnd,
+        progress: 0,
+        speed,
+        onComplete
+      });
+    }
+
+    function cleanupParticle(p) {
+      scene.remove(p.mesh);
+      if (p.beamLine) {
+        p.beamLine.geometry.dispose();
+        p.lineMat.dispose();
+        scene.remove(p.beamLine);
+      }
     }
 
     // --- 4. LOGIC & HUD ---
@@ -305,30 +1237,73 @@
       hud.innerHTML = `<span class="fade-enter block">${text}</span>`;
     }
 
+    // Return the world-space position of the Sentinel-1 radar antenna/beacon.
+    // Both the transmitted pulse and the received echo use this exact endpoint.
+    function getS1ReceiverPosition() {
+      return s1Grp.localToWorld(new THREE.Vector3(0, -0.82, 0.25));
+    }
+
     function fireSAR(targetIdx) {
-      const t = targets[targetIdx];
-      setHUD(`Sentinel-1: Transmitting 5.405 GHz SAR Pulse to ${['Water', 'Forest', 'Urban'][targetIdx]}...`);
-      
-      spawnParticle(s1Pos, t, matS1, 0.03, (pMesh) => {
-        scene.remove(pMesh);
-        if(targetIdx === 0) {
-          // Water: Specular bounce away
-          setHUD("Calm Water | σº < -25 dB | Pitch Black | Specular Reflection (Radar bounces away)");
-          spawnParticle(t, t.clone().add(new THREE.Vector3(-4, 2, -2)), matS1, 0.04, (m) => scene.remove(m));
+      const t = targets[targetIdx].clone();
+      const receiver = getS1ReceiverPosition().clone();
+      const targetName = ['Water', 'Forest', 'Urban'][targetIdx];
+      setHUD(`Sentinel-1: Transmitting 5.405 GHz C-band pulse to ${targetName}...`);
+
+      // OUTBOUND LEG: the pulse leaves the Sentinel-1 antenna and reaches the surface.
+      spawnParticle(receiver, t, true, 0.032, (outboundPulse) => {
+        cleanupParticle(outboundPulse);
+        spawnShockwave(t, 0x22d3ee, 2.8);
+
+        // RETURN LEG: a portion of the backscattered energy travels back to
+        // the SAME Sentinel-1 antenna. Return strength varies by surface type.
+        const spawnReturnEcho = (echoStart, echoStrength, message, visualScale = 1, trailOpacity = 0.65) => {
+          setHUD(message);
+          const echoSpeed = 0.032;
+          spawnParticle(echoStart.clone(), receiver.clone(), true, echoSpeed, (returnPulse) => {
+            cleanupParticle(returnPulse);
+            spawnShockwave(receiver, 0x67e8f9, 1.25, 0);
+            setHUD(`${targetName} | SAR echo received by Sentinel-1 | Backscatter strength: ${echoStrength}`);
+          }, visualScale, trailOpacity, getS1ReceiverPosition);
+        };
+
+        if (targetIdx === 0) {
+          // Smooth water reflects most incident energy specularly away from
+          // the sensor, so the return echo is weak but not visually omitted.
+          spawnReturnEcho(
+            t,
+            'VERY LOW (dark return)',
+            'Calm water: most energy reflects away; a weak backscatter echo returns to Sentinel-1...',
+            0.42, 0.28
+          );
         } else if (targetIdx === 1) {
-          // Forest: Volumetric scattering inside canopy
-          setHUD("Forest | VH Dominant | Canopy Volume | Volumetric Scattering");
-          for(let i=0; i<4; i++) {
-            const scatterTarget = t.clone().add(new THREE.Vector3(-1+Math.random()*2, 0.5+Math.random(), -1+Math.random()*2));
-            spawnParticle(t, scatterTarget, matS1, 0.05, (m) => scene.remove(m));
-          }
+          // Forest volume scattering produces distributed echoes. Show a
+          // small canopy-scattering point, then route the received component
+          // back to the original Sentinel-1 antenna.
+          const canopyScatter = t.clone().add(new THREE.Vector3(0.18, 0.72, -0.12));
+          spawnParticle(t, canopyScatter, true, 0.045, (scatterPulse) => {
+            cleanupParticle(scatterPulse);
+            spawnShockwave(canopyScatter, 0x22d3ee, 1.35, 0);
+            spawnReturnEcho(
+              canopyScatter,
+              'MODERATE (volume scattering)',
+              'Forest: canopy volume scattering produces a return echo toward the same Sentinel-1 satellite...',
+              0.72, 0.48
+            );
+          });
         } else if (targetIdx === 2) {
-          // Urban: Double bounce back to sensor
-          setHUD("Urban Grid | σº > 0 dB | Bright Return | Double-Bounce Corner Reflector");
-          const wallTarget = t.clone().add(new THREE.Vector3(0, 1, -1.5)); // hit building wall
-          spawnParticle(t, wallTarget, matS1, 0.06, (m2) => {
-            scene.remove(m2);
-            spawnParticle(wallTarget, s1Pos, matS1, 0.04, (m3) => scene.remove(m3)); // return to sensor
+          // Urban double-bounce: ground-to-wall reflection, followed by a
+          // return path from the corner-reflector interaction to Sentinel-1.
+          const wallTarget = t.clone().add(new THREE.Vector3(0, 1.05, -1.4));
+          setHUD('Urban: radar reaches a wall-ground corner; double-bounce return is travelling to Sentinel-1...');
+          spawnParticle(t, wallTarget, true, 0.06, (wallPulse) => {
+            cleanupParticle(wallPulse);
+            spawnShockwave(wallTarget, 0x67e8f9, 1.6, 0);
+            spawnReturnEcho(
+              wallTarget,
+              'STRONG (double-bounce)',
+              'Urban corner: strong double-bounce echo returning to the same Sentinel-1 satellite...',
+              1.0, 0.82
+            );
           });
         }
       });
@@ -346,19 +1321,21 @@
 
       if(isClouds) {
         setHUD("Sentinel-2: Attenuated by Cloud Cover. Optical rays scattered before reaching terrain.");
-        const cloudTop = new THREE.Vector3(0, 4, -1); // Hit center of clouds
-        spawnParticle(sunPos, cloudTop, matS2, 0.04, (m) => {
-          scene.remove(m);
+        const cloudTop = new THREE.Vector3(0, 3.2, -0.5);
+        spawnParticle(sunPos, cloudTop, false, 0.04, (m) => {
+          cleanupParticle(m);
+          spawnShockwave(cloudTop, 0xfbbf24, 2.2);
           for(let i=0; i<3; i++) {
-             spawnParticle(cloudTop, cloudTop.clone().add(new THREE.Vector3(-2+Math.random()*4, 2, -2+Math.random()*4)), matS2, 0.05, (ms) => scene.remove(ms));
+             spawnParticle(cloudTop, cloudTop.clone().add(new THREE.Vector3(-2+Math.random()*4, 2, -2+Math.random()*4)), false, 0.05, (ms) => cleanupParticle(ms));
           }
         });
         return;
       }
 
       setHUD("Sentinel-2: Measuring passive solar reflectance (ρ_λ)...");
-      spawnParticle(sunPos, t, matS2, 0.03, (m) => {
-        scene.remove(m);
+      spawnParticle(sunPos, t, false, 0.032, (m) => {
+        cleanupParticle(m);
+        spawnShockwave(t, 0xfbbf24, 2.5);
         if(targetIdx === 0) {
           setHUD("Water Body | High NIR Absorption | Dark in Optical Spectra");
         } else if (targetIdx === 1) {
@@ -366,7 +1343,7 @@
         } else if (targetIdx === 2) {
           setHUD("Urban Grid | High Albedo | Broad Spectrum Reflectance");
         }
-        spawnParticle(t, s2Pos, matS2, 0.03, (m2) => scene.remove(m2));
+        spawnParticle(t, s2Grp.position.clone(), false, 0.032, (m2) => cleanupParticle(m2));
       });
     }
 
@@ -380,44 +1357,78 @@
     });
     
     document.getElementById('chk-night').addEventListener('change', (e) => {
-      sun.visible = !e.target.checked;
-      ambientLight.intensity = e.target.checked ? 0.2 : 0.7;
-      dirLight.intensity = e.target.checked ? 0.0 : 0.6;
-      if(e.target.checked) setHUD("Night Mode: Passive Optical disabled. Active SAR fully operational.");
-      else setHUD("Day Mode: Restored solar irradiance.");
+      const isNight = e.target.checked;
+      sun.visible = !isNight;
+      sunLight.visible = !isNight;
+      scene.background.copy(isNight ? nightBgColor : dayBgColor);
+      scene.fog.color.copy(isNight ? nightBgColor : dayBgColor);
+
+      ambientLight.intensity = isNight ? 0.30 : 0.43;
+      dirLight.intensity = isNight ? 0.14 : 1.28;
+      starMat.opacity = isNight ? 0.85 : 0.0;
+
+      // Illuminate building windows & streetlights in Night Mode
+      glassNightLit.emissiveIntensity = isNight ? 1.85 : 0.22;
+      lampMat.emissiveIntensity = isNight ? 2.25 : 0.16;
+      streetHalos.forEach(h => h.material.opacity = isNight ? 0.30 : 0.025);
+      streetPointLights.forEach(light => { light.intensity = isNight ? 1.15 : 0.0; });
+
+      if(isNight) {
+        fillLight.intensity = 0.68;
+        fillLight.color.setHex(0x4d9dff);
+        setHUD("Night Mode: Cool lunar illumination. Passive Optical disabled; active SAR remains operational.");
+      } else {
+        fillLight.intensity = 0.34;
+        fillLight.color.setHex(0x4ba3d4);
+        setHUD("Day Mode: Restored solar irradiance.");
+      }
     });
 
     document.getElementById('chk-cutaway').addEventListener('change', (e) => {
       const isSeeThrough = e.target.checked;
-      outerMaterials.forEach(mat => {
-        mat.opacity = isSeeThrough ? 0.25 : 1.0;
-        mat.depthWrite = !isSeeThrough;
-      });
+      cutawayTargetOpacity = isSeeThrough ? 1 : 0;
       innerMeshes.forEach(mesh => mesh.visible = isSeeThrough);
       
       document.getElementById('lbl-water').classList.toggle('visible', isSeeThrough);
       document.getElementById('lbl-soil').classList.toggle('visible', isSeeThrough);
-      if(isSeeThrough) setHUD("Dielectric Strata Revealed: High contrast between Water (εr≈80) and Soil (εr≈4).");
+      if(isSeeThrough) setHUD("Dielectric view: grassland partially transparent; river remains visible and water/soil strata are revealed.");
+    });
+
+    document.getElementById('target-select').addEventListener('change', (e) => {
+      const idx = Number(e.target.value);
+      footprintRings.forEach((ring, i) => { ring.visible = i === idx; });
+      setHUD(`Target selected: ${['Water body','Forest canopy','Urban district'][idx]}. Ready for sensor acquisition.`);
+    });
+
+    document.getElementById('speed-range').addEventListener('input', (e) => {
+      speedMultiplier = Number(e.target.value);
+      document.getElementById('speed-value').textContent = `${speedMultiplier.toFixed(2).replace(/0+$/, '').replace(/\.$/, '')}×`;
+    });
+
+    document.getElementById('btn-pause').addEventListener('click', (e) => {
+      isPaused = !isPaused;
+      e.currentTarget.textContent = isPaused ? '▶ Resume' : 'Ⅱ Pause';
+      e.currentTarget.setAttribute('aria-pressed', String(isPaused));
+      setHUD(isPaused ? 'Animation paused. Select Resume to continue the satellite motion and signal pulses.' : 'Animation resumed. Sensors are ready to scan.');
     });
 
     document.getElementById('btn-fire').addEventListener('click', () => {
       const s1On = document.getElementById('chk-s1').checked;
       const s2On = document.getElementById('chk-s2').checked;
-      const targetIdx = Math.floor(Math.random() * 3); // Randomly pick Water, Forest, or Urban
+      const targetIdx = Number(document.getElementById('target-select').value);
 
       if(!s1On && !s2On) {
         setHUD("Error: No sensors active."); return;
       }
 
-      // If both on, alternate or sequence them visually. For clarity, sequence S1 then S2.
       if(s1On) fireSAR(targetIdx);
       if(s2On) {
-        if(s1On) setTimeout(() => fireOptical(targetIdx), 1500); // Delay optical if both fired
+        if(s1On) setTimeout(() => fireOptical(targetIdx), 1500);
         else fireOptical(targetIdx);
       }
     });
 
-    // Simple Orbit Controls via mouse drag
+    // Smooth Orbit & Scroll-Wheel Zoom Controls
     let isDragging = false;
     let previousMousePosition = { x: 0, y: 0 };
     container.addEventListener('pointerdown', (e) => { isDragging = true; previousMousePosition = { x: e.offsetX, y: e.offsetY }; });
@@ -427,21 +1438,46 @@
       const deltaX = e.offsetX - previousMousePosition.x;
       const deltaY = e.offsetY - previousMousePosition.y;
       
-      const angle = deltaX * 0.01;
+      const angle = deltaX * 0.009;
       const x = camera.position.x * Math.cos(angle) - camera.position.z * Math.sin(angle);
       const z = camera.position.x * Math.sin(angle) + camera.position.z * Math.cos(angle);
       camera.position.x = x;
       camera.position.z = z;
       
-      camera.position.y = Math.max(5, Math.min(40, camera.position.y + deltaY * 0.1));
-      camera.lookAt(0,0,0);
+      camera.position.y = Math.max(6, Math.min(38, camera.position.y + deltaY * 0.09));
+      camera.lookAt(cameraTarget);
       
       previousMousePosition = { x: e.offsetX, y: e.offsetY };
     });
 
+    container.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      d = Math.max(5.5, Math.min(15.0, d + e.deltaY * 0.006));
+      const asp = window.innerWidth / window.innerHeight;
+      camera.left = -d * asp; camera.right = d * asp;
+      camera.top = d; camera.bottom = -d;
+      camera.updateProjectionMatrix();
+    }, { passive: false });
+
+    function resetCameraView() {
+      d = defaultView.frustum;
+      camera.left = -d * (window.innerWidth / window.innerHeight);
+      camera.right = d * (window.innerWidth / window.innerHeight);
+      camera.top = d;
+      camera.bottom = -d;
+      camera.position.copy(defaultView.position);
+      camera.lookAt(cameraTarget);
+      camera.updateProjectionMatrix();
+      setHUD('Camera restored to the default isometric view. Drag to orbit and scroll to zoom.');
+    }
+    document.getElementById('btn-reset-view').addEventListener('click', resetCameraView);
+    window.addEventListener('keydown', (e) => {
+      if ((e.key === 'r' || e.key === 'R') && !['INPUT','SELECT','TEXTAREA'].includes(document.activeElement?.tagName)) resetCameraView();
+    });
+
     window.addEventListener('resize', () => {
-      const aspect = window.innerWidth / window.innerHeight;
-      camera.left = -d * aspect; camera.right = d * aspect;
+      const asp = window.innerWidth / window.innerHeight;
+      camera.left = -d * asp; camera.right = d * asp;
       camera.top = d; camera.bottom = -d;
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
@@ -455,7 +1491,6 @@
       const hw = window.innerWidth / 2;
       const hh = window.innerHeight / 2;
 
-      // Map 3D targets to 2D screen space
       const pWater = dielectricTargets.water.clone().project(camera);
       document.getElementById('lbl-water').style.left = `${(pWater.x * hw) + hw}px`;
       document.getElementById('lbl-water').style.top = `${-(pWater.y * hh) + hh}px`;
@@ -468,20 +1503,103 @@
     function animate() {
       requestAnimationFrame(animate);
 
-      // Float satellites
       const time = Date.now() * 0.002;
-      s1Grp.position.y = s1Pos.y + Math.sin(time) * 0.2;
-      s2Grp.position.y = s2Pos.y + Math.cos(time) * 0.2;
 
-      // Update Particles (Linear interpolation)
+      // Pedestrians walk gently along their existing clear paths.
+      if (!isPaused) {
+        pedestrianGroups.forEach((walker) => {
+          const phase = time * 0.22 + walker.phase;
+          const stride = Math.sin(phase * 2.0) * 0.20;
+          walker.legs[0].rotation.x = stride;
+          walker.legs[1].rotation.x = -stride;
+          walker.person.position.x = walker.x + Math.sin(phase) * walker.path;
+          walker.person.rotation.y = Math.cos(phase) >= 0 ? Math.PI / 2 : -Math.PI / 2;
+        });
+
+        // Cars cruise along the existing urban road and wrap smoothly at its ends.
+        movingCars.forEach((vehicle) => {
+          const roadStart = 2.38;
+          const roadLength = 3.22;
+          const travel = ((time * 0.075 + vehicle.phase) % 1) * roadLength;
+          vehicle.car.position.x = vehicle.direction === 1
+            ? roadStart + travel
+            : roadStart + roadLength - travel;
+          vehicle.car.position.z = vehicle.roadZ;
+          vehicle.wheels.forEach((wheel) => { wheel.rotation.z += 0.03 * vehicle.direction; });
+        });
+      }
+
+
+      // Smoothly interpolate terrain material opacity for See-Through Dielectric mode
+      cutawayMaterials.forEach(mat => {
+        const desired = cutawayTargetOpacity > 0.5 ? mat.userData.cutawayOpacity : mat.userData.baseOpacity;
+        mat.opacity += (desired - mat.opacity) * 0.14;
+        mat.depthWrite = mat.opacity > 0.65;
+      });
+
+      if (!isPaused) {
+        // Gentle orbital drift and body rotation
+        s1Grp.position.y = s1Pos.y + Math.sin(time) * 0.18;
+        s2Grp.position.y = s2Pos.y + Math.cos(time) * 0.18;
+        s1Grp.position.x = s1Pos.x + Math.cos(time * 0.22) * 0.20;
+        s1Grp.position.z = s1Pos.z + Math.sin(time * 0.22) * 0.20;
+        s2Grp.position.x = s2Pos.x + Math.cos(time * 0.22 + Math.PI) * 0.20;
+        s2Grp.position.z = s2Pos.z + Math.sin(time * 0.22 + Math.PI) * 0.20;
+        s1Grp.rotation.y = Math.sin(time * 0.3) * 0.035;
+        s2Grp.rotation.y = Math.cos(time * 0.3) * 0.035;
+        // River surface and waterfall remain still, matching the original calm-water design.
+
+        // Gentle cloud drift when enabled
+        if (cloudGrp.visible) {
+          cloudClusters.forEach(c => {
+            c.position.x = c.userData.baseX + Math.sin(time * 0.18 + c.userData.phase) * 0.45;
+          });
+        }
+
+        // Subtle floating dust/ionosphere motes
+        const mPos = dustMotes.geometry.attributes.position.array;
+        for (let i = 0; i < moteCount; i++) {
+          mPos[i * 3 + 1] = moteBaseY[i] + Math.sin(time * 0.45 + i) * 0.18;
+        }
+        dustMotes.geometry.attributes.position.needsUpdate = true;
+
+        // Pulse dielectric cores gently when visible
+        if (waterCore.visible) {
+          waterCoreMat.emissiveIntensity = 0.78 + Math.sin(time * 1.6) * 0.18;
+          soilCoreMat.emissiveIntensity = 0.65 + Math.cos(time * 1.6) * 0.16;
+        }
+      }
+
+      // Update Signal Pulses & Beam Trails
       for (let i = particles.length - 1; i >= 0; i--) {
         const p = particles[i];
-        p.progress += p.speed;
+        if (!isPaused) p.progress += p.speed * speedMultiplier;
         if (p.progress >= 1) {
-          p.onComplete(p.mesh);
+          p.onComplete(p);
           particles.splice(i, 1);
         } else {
+          if (p.followEnd) p.end.copy(p.followEnd());
           p.mesh.position.lerpVectors(p.start, p.end, p.progress);
+          // Trailing tail starts behind the pulse head
+          const tailProgress = Math.max(0, p.progress - 0.38);
+          const tailPos = new THREE.Vector3().lerpVectors(p.start, p.end, tailProgress);
+          p.beamLine.geometry.setFromPoints([tailPos, p.mesh.position]);
+        }
+      }
+
+      // Update Expanding Radar/Optical Shockwave Rings
+      for (let i = shockwaves.length - 1; i >= 0; i--) {
+        const sw = shockwaves[i];
+        if (!isPaused) sw.progress += 0.032 * speedMultiplier;
+        if (sw.progress >= 1) {
+          sw.mesh.geometry.dispose();
+          sw.mat.dispose();
+          scene.remove(sw.mesh);
+          shockwaves.splice(i, 1);
+        } else {
+          const s = 1 + sw.progress * sw.maxScale;
+          sw.mesh.scale.set(s, s, 1);
+          sw.mat.opacity = (1 - sw.progress) * 0.85;
         }
       }
 
