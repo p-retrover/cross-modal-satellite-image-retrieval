@@ -15,11 +15,31 @@ This is an attempt on visualizing the working physics and some parts of the arch
 | [**Satellite Working**](./demos/satellite_working.md) | simulated workings of sentinel-1 and sentinel-2 | [![Particle Demo](images/satellite_physics.png)](https://github.io) | [Launch Demo →](https://p-retrover.github.io/cross-modal-satellite-image-retrieval/demos/sentinel_1_vs_sentinel_2_isometric_technical_figure) |
 | [**Masked InfoNCE Hypersphere Centrifuge**](./demos/centrifuge_demo.md) (incomplete) | Interactive 3D WebGL simulation of false-negative Jaccard gating ($\tau_{\text{IoU}} = 0.40$), Riemannian tangent-space gradients, and multi-label CORINE bitstream masking. | [![Particle Demo](images/Jaccard-False-Negative-Gate.png)](https://github.io) | [Launch Demo →](https://p-retrover.github.io/cross-modal-satellite-image-retrieval/demos/masked_infonce_centrifuge_jaccard_gate) |
 
+
+## Sentinel-1 vs Sentinel-2 Interactive Visualization
+
+This interactive 3D visualization demonstrates the working principles of two major Earth-observation satellite systems: Sentinel-1 (Synthetic Aperture Radar) and Sentinel-2 (Optical Imaging).
+
+The simulation provides an intuitive view of how both satellites observe the same Earth surface using different sensing technologies.
+
+### Key Features
+
+- **Sentinel-1 SAR Simulation:** Visualizes radar signal transmission and return from the Earth's surface.
+- **Sentinel-2 Optical Simulation:** Demonstrates optical satellite imaging and surface observation.
+- **Interactive Controls:** Explore different simulation settings using buttons and sliders.
+- **Day and Night Modes:** Switch between daytime and nighttime environments.
+- **Cloud Cover:** Adjust cloud conditions to explore their visual impact.
+- **Dielectric Mode:** Explore the dielectric-related simulation mode.
+- **Animated Environment:** Includes moving clouds, pedestrians, and vehicles to create a more dynamic scene.
+- **Terrain and Landscape:** Features a circular terrain environment with a river, waterfall, road, and simplified garden.
+
+### Simulation Controls
+
+Users can interact with the scene through the available controls, observe satellite operations, and pause or resume the animation.
+
+The visualization is designed as an educational companion to the main research project, helping users understand the physical differences between SAR and optical satellite observations.
+
 ## Project Overview
-
-This repository contains the codebase, research artifacts, and technical article for **Cross-Modal Satellite Image Retrieval**. The project aligns heterogeneous Sentinel-1 Synthetic Aperture Radar (SAR) and Sentinel-2 optical imagery into a shared, modality-agnostic latent space.
-
-By utilizing ConvNeXt-Tiny backbones, Generalized Mean (GeM) pooling, and a multi-label Jaccard-masked InfoNCE loss, the architecture overcomes the modality gap (cone collapse) to enable accurate, sub-millisecond cross-sensor image retrieval.
 
 ## About the Dataset
 
