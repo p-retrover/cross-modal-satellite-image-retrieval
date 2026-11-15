@@ -1,7 +1,6 @@
 ---
 title: "Cross-Modal Satellite Image Retrieval"
 subtitle: "Semantic Alignment of Heterogeneous Active and Passive Sensors"
-author: "Author Name"
 date: "\\today"
 abstract: |
   This research paper investigates cross-modal satellite image retrieval using paired Sentinel-1 SAR and Sentinel-2 optical imagery. A unified, modality-agnostic latent space is constructed via ConvNeXt-Tiny and Generalized Mean pooling. By integrating a multi-label Jaccard masked InfoNCE loss and frozen inductive validation centering, the system successfully neutralizes modality cone collapse and enables sub-millisecond retrieval across heterogeneous remote sensing domains.
@@ -9,6 +8,35 @@ geometry: "a4paper, margin=1in"
 fontsize: 11pt
 linestretch: 1.2
 toc-depth: 2
+include-before: |
+  \thispagestyle{plain}
+  \vspace*{1.5cm}
+  \noindent{\Huge\bfseries Author Contributions}
+  \addcontentsline{toc}{chapter}{Author Contributions}
+  \vspace{0.8cm}
+
+  \noindent The authors confirm complementary contributions to the research, software engineering, interactive demonstrations, and technical documentation of this project as detailed below:
+
+  \vspace{0.8cm}
+
+  \renewcommand{\arraystretch}{1.45}
+  \begin{tabular}{@{} p{0.24\textwidth} p{0.26\textwidth} p{0.44\textwidth} @{}}
+  \hline
+  \textbf{Author Name} & \textbf{Primary Role} & \textbf{Technical \& Report Deliverables} \\
+  \hline
+  \textbf{Omm satyakam} \newline \small 424ma5005 & End-to-End Implementation, Figures, Demos \& Report Generation & Developed the core PyTorch training, FAISS evaluation, and ONNX export pipeline; generated architecture diagrams, computational graphs, and qualitative retrieval visualizations; compiled and formatted the final technical report. \\
+  \hline
+  \textbf{Rabi Narayan} \newline \small 424ph5023 & Literature Research, Code Refinement \& Algorithmic Formulation & Conducted foundational literature and domain research on cross-modal SAR-optical retrieval; refined key model and training components (including EMA buffer synchronization and stem/loss modules); authored the mathematical and algorithmic formulations (Algorithm 4.1 and Algorithm 5.1). \\
+  \hline
+  \textbf{Teenu Singh} \newline \small 424ma5021 & Interactive Demo Enhancement, Documentation \& Presentation & Enhanced the interactive cross-modal satellite retrieval visualization demo, authored project and user documentation, and co-developed the final presentation deck. \\
+  \hline
+  \textbf{Beesetti Uday} \newline \small 424ph5012 & Presentation Design \& Synthesis & Structured, designed, and synthesized the project slides and visual presentation materials for final demonstration. \\
+  \hline
+  \end{tabular}
+
+  \vfill
+  \noindent\textit{Note: All authors reviewed, validated, and approved the final manuscript and codebase.}
+  \newpage
 bibliography: references.bib
 csl: ieee.csl
 link-citations: true

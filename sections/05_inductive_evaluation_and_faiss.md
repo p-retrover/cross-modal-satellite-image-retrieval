@@ -48,6 +48,38 @@ $$\text{Dice}@K(q) = \frac{1}{K} \sum_{r=1}^{K} \frac{2 \vert{}Y_q \cap Y_{h_r}\
 
 The system then computes the mean Dice score across all valid queries.
 
+### Algorithmic Evaluation Protocol
+
+The complete zero-leakage evaluation workflow—integrating frozen validation centroid calibration, unified modality-agnostic FAISS indexing, self-match filtering, and dual-dimensional metric computation—is formalized below:
+
+**Algorithm 5.1: Frozen Validation-Centered Retrieval and Test Evaluation**
+
+* **Require:** Best saved model checkpoint; paired validation set $\mathcal{D}_{\mathrm{val}}$ ($N_{\mathrm{val}} = 3{,}255$); paired test set $\mathcal{D}_{\mathrm{test}}$ ($N_{\mathrm{test}} = 3{,}248$) with multi-labels $Y$ and pair IDs ($\text{pid}$); evaluation cutoffs $K \in \{1, 5, 10\}$.
+* **Ensure:** Unified retrieval rankings, $\text{Geo R}@K$, and twin-excluded mean label $\text{Dice}@K$.
+
+1. Load the best model checkpoint and set both target encoders ($f_{\mathrm{SAR}}^{\mathrm{target}}, f_{\mathrm{Opt}}^{\mathrm{target}}$) to evaluation mode.
+2. Initialize empty validation embedding sets $\mathcal{Z}^{\mathrm{val}}_{\mathrm{SAR}}$ and $\mathcal{Z}^{\mathrm{val}}_{\mathrm{Opt}}$.
+3. **For** each paired mini-batch in $\mathcal{D}_{\mathrm{val}}$ **do:**
+   a. Extract SAR and optical embeddings without gradients using their corresponding target encoders.
+   b. Append the embeddings to $\mathcal{Z}^{\mathrm{val}}_{\mathrm{SAR}}$ and $\mathcal{Z}^{\mathrm{val}}_{\mathrm{Opt}}$.
+4. Compute the modality-specific validation centroids:
+   $$\boldsymbol{\mu}_{m} \gets \frac{1}{N_{\mathrm{val}}} \sum_{i=1}^{N_{\mathrm{val}}} \mathbf{z}^{\mathrm{val}}_{m,i}, \quad m \in \{\mathrm{SAR}, \mathrm{Opt}\}$$
+5. Freeze both centroids ($\boldsymbol{\mu}_{\mathrm{SAR}}, \boldsymbol{\mu}_{\mathrm{Opt}}$); do not compute or update centroids using test embeddings.
+6. Extract raw SAR and optical embeddings, pair IDs ($\text{pid}$), and multi-label sets ($Y$) for every pair in $\mathcal{D}_{\mathrm{test}}$.
+7. **For** each test pair $i \in \{1, \ldots, N_{\mathrm{test}}\}$ and modality $m \in \{\mathrm{SAR}, \mathrm{Opt}\}$ **do:**
+   a. Center and $\ell_2$-normalize the embedding:
+      $$\widehat{\mathbf{z}}_{m,i} \gets \frac{\mathbf{z}_{m,i} - \boldsymbol{\mu}_{m}}{\left\|\mathbf{z}_{m,i} - \boldsymbol{\mu}_{m}\right\|_2}$$
+8. Form the unified $2N_{\mathrm{test}}$-item gallery ($6{,}496$ items) by stacking the calibrated SAR and optical test embeddings, retaining each item's pair ID ($\text{pid}$), modality ($\text{mod}$), and label set ($Y$).
+9. Build an exact FAISS inner-product index `faiss.IndexFlatIP(256)` and populate it with the unified gallery embeddings.
+10. **For** each modality-specific test item $q \in \{1, \ldots, 2N_{\mathrm{test}}\}$ used as a query **do:**
+    a. Search the unified FAISS index for the top $25$ candidates in descending inner-product order.
+    b. Remove the exact self-match query item ($\text{pid}_h = \text{pid}_q \land \text{mod}_h = \text{mod}_q$) from the candidate list.
+    c. Compute $\text{Geo R}@K(q) \gets 1$ if the opposite-modality counterpart with the same pair ID ($\text{pid}_{h_r} = \text{pid}_q \land \text{mod}_{h_r} \neq \text{mod}_q$) occurs among the first $K$ remaining candidates; otherwise set $\text{Geo R}@K(q) \gets 0$.
+    d. Remove all candidates sharing the query's pair ID ($\text{pid}_h = \text{pid}_q$) to form the twin-excluded semantic ranking.
+    e. Compute $\text{Dice}@K(q)$ over the first $K$ candidates in this twin-excluded semantic ranking.
+11. Average $\text{Geo R}@K(q)$ and $\text{Dice}@K(q)$ over all $2N_{\mathrm{test}}$ modality-specific test queries (and separately by query modality for directional analysis).
+12. **Return** unified retrieval rankings, $\text{Geo R}@K$, and twin-excluded mean label $\text{Dice}@K$.
+
 ## Hardware-Synchronized Latency Profiling
 
 Operational deployment requires verified sub-millisecond retrieval latency. PyTorch executes CUDA kernels asynchronously. Therefore, standard Python `time.time()` calls around a forward pass return before the GPU finishes its computation, which underestimates latency.
@@ -56,10 +88,7 @@ To measure latency accurately, the benchmark enforces explicit stream barrier sy
 
 1. **Encoding Latency:** The wall-clock time that the ConvNeXt-Tiny backbone needs to process one query image.
 
-
 2. **Search Latency:** The time that FAISS needs to compute inner products and sort the top-$K$ candidates across the 6,496-item gallery.
-
-
 
 ## Experimental Discipline and Reproducibility Protocol
 
@@ -67,11 +96,8 @@ Every experiment and ablation follows four strict rules to ensure scientific rep
 
 * **Split Integrity:** The training loop uses only the 7,180 training pairs, and the test split remains untouched during training and hyperparameter tuning.
 
-
 * **Checkpoint Selection:** The pipeline selects model weights from composite validation performance ($\text{Geo R}@5 + \text{Mean Label Dice}@5$) and saves them to disk with OS-level buffer synchronization (`os.sync()`) to prevent file corruption.
 
-
 * **Baseline Discipline:** The benchmark maintains a standard baseline (unmasked InfoNCE and an uncalibrated FAISS gallery) and changes only one major architectural or mathematical factor at a time.
-
 
 * **Reporting:** The evaluation never uses transductive centering or test-set tuning, so all metrics reflect strict inductive, zero-leakage deployment.
